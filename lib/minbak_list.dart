@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'bnb_model.dart';
+import 'minbak_model.dart';
 //민박 목록 페이지
 
-class BnBListPage extends StatelessWidget {
-  const BnBListPage({super.key});
+class MinbakListPage extends StatelessWidget {
+  const MinbakListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 9,
+      length: 7,
       child: Scaffold(
         appBar: AppBar(
           //title: const Text('민박 목록 페이지'),
@@ -34,7 +34,6 @@ class BnBListPage extends StatelessWidget {
                   Tab(text: '충청'),
                   Tab(text: '경상'),
                   Tab(text: '전라'),
-                  Tab(text: '제주'),
                 ],
               ),
             ),
@@ -49,7 +48,6 @@ class BnBListPage extends StatelessWidget {
             BnBFilterableList(region: '충청'),
             BnBFilterableList(region: '경상'),
             BnBFilterableList(region: '전라'),
-            BnBFilterableList(region: '제주'),
           ],
         ),
       ),
@@ -67,7 +65,7 @@ class BnBFilterableList extends StatefulWidget {
 }
 
 class _BnBFilterableListState extends State<BnBFilterableList>{
-  List<String> filters = ['와이파이', '취식 가능', '주차 가능', '반려동물 허용'];
+  List<String> filters = ['굿스테이', '조식 제공', '와이파이', '에어컨'];
   List<bool> selectedFilters = [false, false, false, false];
 
   @override
@@ -101,7 +99,7 @@ class _BnBFilterableListState extends State<BnBFilterableList>{
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<BnB>>(
+            child: FutureBuilder<List<Minbak>>(
               future: fetchBnBs(widget.region, selectedFilters), // 백엔드에서 데이터를 가져오는 Future 함수 호출
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -114,7 +112,7 @@ class _BnBFilterableListState extends State<BnBFilterableList>{
                   return ListView.builder(
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
-                      final bnb = snapshot.data![index];
+                      final minbak = snapshot.data![index];
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
@@ -123,7 +121,7 @@ class _BnBFilterableListState extends State<BnBFilterableList>{
                         margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                         child: ListTile(
                           leading: Image.network(
-                            bnb.imageUrl,
+                            minbak.imageUrl,
                             width: 70,
                             height: 70,
                             fit: BoxFit.cover,
@@ -131,20 +129,20 @@ class _BnBFilterableListState extends State<BnBFilterableList>{
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
-                          title: Text(bnb.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Column(
+                          title: Text(minbak.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(bnb.features.join(', ')),
-                              const Text('기타 정보들... '),
+                              Text('굿스테이, 조식 제공, 와이파이'), //minbak.features.join(', ')
+                              Text('기타 정보들...'),
                             ],
                           ),
                           trailing: IconButton(
                             icon: Icon(
-                              bnb.isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: bnb.isFavorite ? Colors.red : null,
+                              minbak.isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: minbak.isFavorite ? Colors.red : null,
                             ),
-                            onPressed: () => setState(() => bnb.toggleFavorite())
+                            onPressed: () => setState(() => minbak.toggleFavorite())
                           ),
                           onTap: () {
                             // 민박 상세 페이지로 이동하는 코드 추가 가능

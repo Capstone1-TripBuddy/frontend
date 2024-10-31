@@ -1,6 +1,6 @@
 //찜 목록 페이지
 import 'package:flutter/material.dart';
-import 'bnb_model.dart';
+import 'minbak_model.dart';
 
 /* 민박 리스트에서 찜을 한 것에 대한 목록을 보여줌
  찜 버튼을 눌러서 찜을 빼면 찜 목록에서도 삭제되면서 서버 db에서도
@@ -24,7 +24,7 @@ class _WishListPageState extends State<WishListPage> {
       appBar: AppBar(
         backgroundColor: Colors.teal,
       ),
-      body: FutureBuilder<List<BnB>>(
+      body: FutureBuilder<List<Minbak>>(
         future: fetchFavoriteBnBs(), // 찜한 민박들만 가져오는 Future 함수 호출
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -55,11 +55,11 @@ class _WishListPageState extends State<WishListPage> {
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                     title: Text(bnb.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Column(
+                    subtitle: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(bnb.features.join(', ')),
-                        const Text('기타 정보들...'),
+                        Text('굿스테이, 조식 제공, 와이파이'),  //bnb.features.join(', ')
+                        Text('기타 정보들...'),
                       ],
                     ),
                     trailing: IconButton(

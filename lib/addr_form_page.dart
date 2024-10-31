@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:remedi_kopo/remedi_kopo.dart';
 
-import 'main_bnb_page.dart';
+import 'main_minbak_page.dart';
 
 //여행을 출발할 주소 검색  민박 가는 시간 계산 후 표시 위함
 class AddressFormPage extends StatefulWidget {
@@ -49,11 +49,11 @@ class _AddressFormPageState extends State<AddressFormPage> {
       );
       formData['address'] = address;
 
-      final buildingName = model.buildingName ?? '';
+      /*final buildingName = model.buildingName ?? '';
       _addressDetailController.value = TextEditingValue(
         text: buildingName,
       );
-      formData['address_detail'] = buildingName;
+      formData['address_detail'] = buildingName;*/
     }
   }
 

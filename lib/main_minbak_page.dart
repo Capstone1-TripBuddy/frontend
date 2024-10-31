@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/bnb_list.dart';
+import 'package:trip_buddy/minbak_list.dart';
 import 'package:trip_buddy/wish_list.dart';
 
 class MainPage extends StatefulWidget {
@@ -12,7 +12,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
-    BnBListPage(),
+    MinbakListPage(),
     WishListPage(),
     // page 넣기
     // BnBListPage, WishListPage, AttractionListPage, ExperienceListPage

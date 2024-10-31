@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-//import 'package:trip_buddy/bnb_list.dart';
-//import 'package:trip_buddy/main_bnb_page.dart';
+//import 'package:trip_buddy/minbak_list.dart';
+//import 'package:trip_buddy/main_minbak_page.dart';
 import 'addr_form_page.dart';
 
 void main() {
