@@ -136,7 +136,7 @@ class _BnBFilterableListState extends State<BnBFilterableList>{
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(bnb.features.join(', ')),
-                              const Text('기타 정보들...'),
+                              const Text('기타 정보들... '),
                             ],
                           ),
                           trailing: IconButton(
