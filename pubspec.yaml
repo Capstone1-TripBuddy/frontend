@@ -35,6 +35,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   remedi_kopo: ^0.0.2
   http: ^1.2.2
+  provider:
 dependency_overrides:
   webview_flutter: ^3.0.0
 dev_dependencies:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:remedi_kopo/remedi_kopo.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'main_minbak_page.dart';
 
 //여행을 출발할 주소 검색  민박 가는 시간 계산 후 표시 위함
@@ -48,6 +49,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
         text: address,
       );
       formData['address'] = address;
+
 
       /*final buildingName = model.buildingName ?? '';
       _addressDetailController.value = TextEditingValue(
@@ -116,7 +118,11 @@ class _AddressFormPageState extends State<AddressFormPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal[500],
                 ),
-                child: Text('다음으로',style: TextStyle(color: Colors.grey[100],fontSize: 16,fontWeight: FontWeight.w700),),
+                child: Text('다음으로',
+                  style: TextStyle(
+                      color: Colors.grey[100],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700),),
               ),
             ),
             const SizedBox(height: 80),

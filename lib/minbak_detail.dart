@@ -4,42 +4,25 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class MinbakDetailPage extends StatefulWidget {
-  final Minbak bnb;
+  final Minbak minbak;
 
-  const MinbakDetailPage({super.key, required this.bnb});
+  const MinbakDetailPage({super.key, required this.minbak});
 
   @override
   _MinbakDetailPageState createState() => _MinbakDetailPageState();
 }
 
 class _MinbakDetailPageState extends State<MinbakDetailPage> {
-  Map<String, dynamic>? locationData;
-
   @override
   void initState() {
     super.initState();
-    fetchLocationData();
-  }
-
-  Future<void> fetchLocationData() async {
-    final apiUrl = 'https://api.example.com/location'; // 실제 API 주소로 변경
-    final response = await http.get(Uri.parse(apiUrl));
-
-    if (response.statusCode == 200) {
-      setState(() {
-        locationData = jsonDecode(response.body);
-      });
-    } else {
-      // 오류 처리
-      print('Failed to load location data');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.bnb.name),
+        title: Text(widget.minbak.name),
         backgroundColor: Colors.teal,
       ),
       body: SingleChildScrollView(
@@ -49,7 +32,7 @@ class _MinbakDetailPageState extends State<MinbakDetailPage> {
             Stack(
               children: [
                 Image.network(
-                  widget.bnb.imageUrl,
+                  'https://picsum.photos/200',
                   width: double.infinity,
                   height: 250,
                   fit: BoxFit.cover,
@@ -59,13 +42,13 @@ class _MinbakDetailPageState extends State<MinbakDetailPage> {
                   right: 20,
                   child: IconButton(
                     icon: Icon(
-                      widget.bnb.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: widget.bnb.isFavorite ? Colors.red : Colors.white,
+                      widget.minbak.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: widget.minbak.isFavorite ? Colors.red : Colors.white,
                       size: 30,
                     ),
                     onPressed: () {
                       setState(() {
-                        widget.bnb.toggleFavorite();
+                        widget.minbak.toggleFavorite();
                       });
                     },
                   ),
@@ -78,20 +61,20 @@ class _MinbakDetailPageState extends State<MinbakDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.bnb.name,
+                    widget.minbak.name,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.phone, color: Colors.teal),
-                      SizedBox(width: 8),
+                      const Icon(Icons.phone, color: Colors.teal),
+                      const SizedBox(width: 8),
                       Text(
-                        '010-1234-5678', // 임시 전화번호
-                        style: TextStyle(
+                        widget.minbak.tel, // 임시 전화번호
+                        style: const TextStyle(
                           fontSize: 16,
                         ),
                       ),
@@ -106,14 +89,12 @@ class _MinbakDetailPageState extends State<MinbakDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  locationData == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : Container(
+                  Container(
                     height: 200,
                     width: double.infinity,
                     color: Colors.grey[300],
                     child: Center(
-                      child: Text('위도: ${locationData!['latitude']}, 경도: ${locationData!['longitude']}'),
+                      child: Text('위도: ${widget.minbak.lat}, 경도: ${widget.minbak.lon}'),
                     ),
                   ),
                 ],

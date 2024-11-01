@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trip_buddy/minbak_model.dart';
 //import 'package:trip_buddy/minbak_list.dart';
 //import 'package:trip_buddy/main_minbak_page.dart';
 import 'addr_form_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+    create: (context) => MinbakProvider(),
+    child: const MyApp(),
+  ),);
 }
 
 class MyApp extends StatelessWidget {

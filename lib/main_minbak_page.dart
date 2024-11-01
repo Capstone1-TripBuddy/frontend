@@ -13,7 +13,7 @@ class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     MinbakListPage(),
-    WishListPage(),
+    //WishListPage(),
     // page 넣기
     // BnBListPage, WishListPage, AttractionListPage, ExperienceListPage
   ];

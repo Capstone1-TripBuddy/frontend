@@ -1,5 +1,6 @@
 //찜 목록 페이지
 import 'package:flutter/material.dart';
+import 'minbak_detail.dart';
 import 'minbak_model.dart';
 
 /* 민박 리스트에서 찜을 한 것에 대한 목록을 보여줌
@@ -9,7 +10,7 @@ import 'minbak_model.dart';
  민박 리스트는 카테고리 따라 달라지는 것
  찜 리스트는 찜 유무에 따라 달라짐
  */
-
+/*
 class WishListPage extends StatefulWidget {
   const WishListPage({super.key});
 
@@ -22,10 +23,10 @@ class _WishListPageState extends State<WishListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.teal,
+        //backgroundColor: Colors.teal,
       ),
       body: FutureBuilder<List<Minbak>>(
-        future: fetchFavoriteBnBs(), // 찜한 민박들만 가져오는 Future 함수 호출
+        future: fetchFavoriteMinbaks(), // 찜한 민박들만 가져오는 Future 함수 호출
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -37,7 +38,7 @@ class _WishListPageState extends State<WishListPage> {
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
-                final bnb = snapshot.data![index];
+                final minbak = snapshot.data![index];
                 return Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
@@ -46,7 +47,7 @@ class _WishListPageState extends State<WishListPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                   child: ListTile(
                     leading: Image.network(
-                      bnb.imageUrl,
+                      'https://picsum.photos/200',
                       width: 70,
                       height: 70,
                       fit: BoxFit.cover,
@@ -54,22 +55,38 @@ class _WishListPageState extends State<WishListPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15.0),
                     ),
-                    title: Text(bnb.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Column(
+                    title: Text(minbak.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('굿스테이, 조식 제공, 와이파이'),  //bnb.features.join(', ')
-                        Text('기타 정보들...'),
+                        Row(
+                          children: [
+                            if (minbak.internet) const Text('인터넷'),
+                            if (minbak.breakfast) const Text('조식'),
+                            if (minbak.goodstay) const Text('굿스테이'),
+                          ],
+                        ), //bnb.features.join(', ')
+                        const Text('기타 정보들...'),
                       ],
                     ),
                     trailing: IconButton(
                       icon: Icon(
-                        bnb.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: bnb.isFavorite ? Colors.red : null,
+                        minbak.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: minbak.isFavorite ? Colors.red : null,
                       ),
-                      onPressed: () => setState(() => bnb.toggleFavorite()),
+                      onPressed: () {
+                        setState(() {
+                          minbak.toggleFavorite();
+                        });
+                      }
                     ),
                     onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MinbakDetailPage(minbak: minbak),
+                          )
+                      );
                       // 민박 상세 페이지로 이동하는 코드 추가 가능
                     },
                   ),
@@ -81,5 +98,5 @@ class _WishListPageState extends State<WishListPage> {
       ),
     );
   }
-}
+}*/
 
