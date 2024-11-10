@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:trip_buddy/minbak_model.dart';
-//import 'package:trip_buddy/minbak_list.dart';
-//import 'package:trip_buddy/main_minbak_page.dart';
-import 'addr_form_page.dart';
+import 'package:trip_buddy/image_upload_page.dart';
+
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-    create: (context) => MinbakProvider(),
-    child: const MyApp(),
-  ),);
+    const MyApp()
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -35,8 +30,8 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      home: const AddressFormPage(), // 나중에 splash page 추가
-      //home: const MainPage(),
+      home: ImageUploadPage(), //나중에 splash page 추가
+
     );
   }
 }
