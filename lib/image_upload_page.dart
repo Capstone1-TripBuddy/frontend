@@ -59,12 +59,12 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('사진 업로드'),
-        backgroundColor: Colors.teal,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            const SizedBox(height: 15),
             ElevatedButton.icon(
               onPressed: () async {
                 await requestPermissions();
@@ -129,6 +129,7 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 15),
           ],
         ),
       ),

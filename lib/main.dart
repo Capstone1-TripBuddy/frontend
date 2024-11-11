@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/image_upload_page.dart';
-
+import 'main_page.dart';
 
 void main() {
   runApp(
@@ -21,16 +20,16 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           titleTextStyle: TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: Colors.black),
           elevation: 2,
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      home: ImageUploadPage(), //나중에 splash page 추가
+      home: MainPage(), //나중에 splash page 추가
 
     );
   }
