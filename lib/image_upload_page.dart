@@ -58,7 +58,7 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('사진 업로드'),
+        title: const Text('Photos Upload'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -70,11 +70,11 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
                 await requestPermissions();
               },
               icon: const Icon(Icons.photo_library),
-              label: const Text('사진 선택'),
+              label: const Text('Select Photos'),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.teal,
+                foregroundColor: Colors.grey,
                 backgroundColor: Colors.white,
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -118,9 +118,9 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
                 }
               },
               icon: const Icon(Icons.cloud_upload),
-              label: const Text('사진 업로드'),
+              label: const Text('Upload Photos'),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.teal,
+                foregroundColor: Colors.grey,
                 backgroundColor: Colors.white,
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),

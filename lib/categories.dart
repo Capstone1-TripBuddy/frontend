@@ -1,37 +1,47 @@
 import 'package:flutter/material.dart';
+import 'category_detail_page.dart';
 import 'image_upload_page.dart';
+import 'package:http/http.dart' as http;
 
-
-class MainPage extends StatefulWidget {
+class CategoryPage extends StatefulWidget {
   @override
-  _MainPageState createState() => _MainPageState();
+  _CategoryPageState createState() => _CategoryPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _CategoryPageState extends State<CategoryPage> {
   // 예시 데이터: 실제 데이터는 서버에서 받아와야 합니다.
   final Map<String, List<String>> categorizedImages = {
-    '풍경': ['https://picsum.photos', 'https://picsum.photos/200/400'],
-    '인물': ['https://example.com/portrait1.jpg', 'https://example.com/portrait2.jpg'],
+    '풍경': ['https://picsum.photos/200/300', 'https://picsum.photos/200/300'],
+    '인물': ['https://picsum.photos/200/300', 'https://picsum.photos/200/300'],
     '동물': ['https://example.com/animal1.jpg', 'https://example.com/animal2.jpg'],
     '음식': ['https://example.com/food1.jpg', 'https://example.com/food2.jpg'],
   };
+
+  Future<void> downloadImages(String category, List<String> imageUrls) async {
+    for (var url in imageUrls) {
+      try {
+        var response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          // 이미지 데이터를 로컬에 저장하는 로직이 필요합니다.
+          // 예시로는 디렉토리 생성 및 파일 쓰기를 포함할 수 있습니다.
+          print('Downloaded image from $url');
+        } else {
+          print('Failed to download image: $url');
+        }
+      } catch (e) {
+        print('Error downloading image: $e');
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('$category 카테고리의 모든 사진을 다운로드했습니다.'),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('사진 분류'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ImageUploadPage()),
-              );
-            },
-          ),
-        ],
+        title: const Text('Categories'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -40,6 +50,15 @@ class _MainPageState extends State<MainPage> {
             return GestureDetector(
               onTap: () {
                 // 클릭 시 해당 카테고리 이미지 페이지로 이동하거나 다른 작업 수행 가능
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CategoryDetailPage(
+                      categoryName: entry.key,
+                      imageUrls: entry.value,
+                    ),
+                  ),
+                );
               },
               child: Card(
                 elevation: 4,
@@ -79,6 +98,30 @@ class _MainPageState extends State<MainPage> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: PopupMenuButton(
+                          onSelected: (value) {
+                            if (value == 'download') {
+                              downloadImages(entry.key, entry.value);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'download',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.download, color: Colors.black54),
+                                  SizedBox(width: 8),
+                                  Text('전체 다운로드'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                         ),
                       ),
                     ],
