@@ -16,7 +16,7 @@ class CategoryDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3, // 두 개의 열로 사진을 표시
+            crossAxisCount: 3, // 세 개의 열로 사진을 표시
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
           ),

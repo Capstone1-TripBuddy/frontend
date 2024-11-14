@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'category_detail_page.dart';
-import 'image_upload_page.dart';
 import 'package:http/http.dart' as http;
 
 class CategoryPage extends StatefulWidget {
@@ -9,6 +8,43 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
+
+  /* 서버에서 가져온 데이터를 저장할 변수
+  Map<String, List<String>> categorizedImages = {};
+  @override
+  void initState() {
+    super.initState();
+    fetchCategoryData(); // 페이지 초기화 시 데이터 가져오기
+  }
+  Future<void> fetchCategoryData() async {
+    final response = await http.get(Uri.parse('서버주소/api/albums/{group-id}'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        categorizedImages = Map<String, List<String>>.from(data);
+      });
+    } else {
+      print('Failed to load data');
+    }
+  }
+
+  Future<void> downloadImages(String category) async {
+    final response = await http.post(
+      Uri.parse('서버주소/api/albums/download'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'category': category}),
+    );
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('$category 카테고리의 모든 사진을 다운로드했습니다.'),
+      ));
+    } else {
+      print('Failed to download images for $category');
+    }
+  }
+  */
+
   // 예시 데이터: 실제 데이터는 서버에서 받아와야 합니다.
   final Map<String, List<String>> categorizedImages = {
     '풍경': ['https://picsum.photos/200/300', 'https://picsum.photos/200/300'],
