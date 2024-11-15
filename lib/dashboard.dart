@@ -45,9 +45,9 @@ class DashboardPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => CategoryPage()),
                 );
               },
-              child: _buildStatCard('Categories', '6', Icons.folder),
+              child: _buildStatCard('Categories', '4', Icons.folder),
             ),
-            _buildStatCard('Recent Uploads', '12', Icons.upload_file),
+            _buildStatCard('Recent Uploads', '0', Icons.upload_file),
             const SizedBox(height: 20),
             // 최근 활동
             const Text(
