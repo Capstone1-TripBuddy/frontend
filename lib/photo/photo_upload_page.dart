@@ -6,14 +6,14 @@ import 'package:image_picker/image_picker.dart';
 
 const String serverUrl = 'https://bb07-219-255-207-130.ngrok-free.app';
 
-class ImageUploadPage extends StatefulWidget {
-  const ImageUploadPage({super.key});
+class PhotoUploadPage extends StatefulWidget {
+  const PhotoUploadPage({super.key});
 
   @override
-  _ImageUploadPageState createState() => _ImageUploadPageState();
+  _PhotoUploadPageState createState() => _PhotoUploadPageState();
 }
 
-class _ImageUploadPageState extends State<ImageUploadPage> {
+class _PhotoUploadPageState extends State<PhotoUploadPage> {
   final ImagePicker _picker = ImagePicker();
   List<File> _selectedImages = [];
   bool _isUploading = false;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'category_detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
-import 'fetch_photos.dart';
+import '../photo/fetch_photos.dart';
 
 /*
 class CategoryPage extends StatefulWidget {

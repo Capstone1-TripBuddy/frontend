@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'categories.dart';
-import 'image_upload_page.dart';
+import 'category/categories.dart';
+import 'photo/photo_upload_page.dart';
 
 class DashboardPage extends StatelessWidget {
   @override
@@ -24,7 +24,7 @@ class DashboardPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ImageUploadPage()),
+                      MaterialPageRoute(builder: (context) => const PhotoUploadPage()),
                     );
                   },
                   icon: const Icon(Icons.upload),

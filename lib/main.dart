@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip_buddy/dashboard.dart';
-import 'categories.dart';
+import 'package:trip_buddy/group/group_page.dart';
+import 'category/categories.dart';
 
 void main() {
   runApp(
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         //scaffoldBackgroundColor: Colors.grey[50],
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
-          titleTextStyle: TextStyle(
+          titleTextStyle: const TextStyle(
             color: Colors.black,
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -30,7 +31,8 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      home: DashboardPage(), //나중에 splash page 추가
+      //home: DashboardPage(), //나중에 splash page 추가
+      home: const GroupPage(),
 
     );
   }
