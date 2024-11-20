@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip_buddy/dashboard.dart';
 import 'package:trip_buddy/group/group_page.dart';
+import 'package:trip_buddy/welcome/welcome_page.dart';
 import 'category/categories.dart';
 
 void main() {
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.grey[50],
       ),
       //home: DashboardPage(), //나중에 splash page 추가
-      home: const GroupPage(),
+      home: const WelcomePage(),
 
     );
   }
