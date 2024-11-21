@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trip_buddy/group/group_list_page.dart';
 import 'package:trip_buddy/group/join_group_page.dart';
 
 import 'create_group_page.dart';
@@ -23,12 +24,12 @@ class GroupPage extends StatelessWidget{
           // 반투명한 카드와 텍스트를 포함한 내용
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: const EdgeInsets.symmetric(horizontal: 28.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Welcome to\nTravelGroup',
+                    'Travel Group',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.black,
@@ -37,7 +38,7 @@ class GroupPage extends StatelessWidget{
                     ),
                   ),
                   const SizedBox(height: 50),
-                  // "Create Group" 카드
+                  // 그룹 생성 카드
                   GestureDetector(
                     onTap: () {
                       // 그룹 생성 페이지로 이동
@@ -58,18 +59,17 @@ class GroupPage extends StatelessWidget{
                         child: Column(
                           children: [
                             Icon(Icons.add_circle, size: 40, color: Colors.black),
-                            SizedBox(height: 10),
+                            SizedBox(height: 5),
                             Text(
-                              'Create Group',
+                              '그룹 생성',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
                             ),
-                            SizedBox(height: 5),
                             Text(
-                              'Start a new travel group and invite others',
+                              '                                                            ',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.black54),
                             ),
@@ -78,8 +78,8 @@ class GroupPage extends StatelessWidget{
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // "Join Group" 카드
+                  const SizedBox(height: 10),
+                  // 그룹 참가 카드
                   GestureDetector(
                     onTap: () {
                       // 그룹 참가 페이지로 이동
@@ -99,18 +99,58 @@ class GroupPage extends StatelessWidget{
                         child: Column(
                           children: [
                             Icon(Icons.vpn_key, size: 40, color: Colors.black),
-                            SizedBox(height: 10),
+                            SizedBox(height: 5),
                             Text(
-                              'Join Group',
+                              '그룹 참가',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
                             ),
+                            Text(
+                              '                                                            ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.black54),
+                            ),
+
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // 그룹 리스트 카드
+                  GestureDetector(
+                    onTap: () {
+                      // 그룹 리스트 페이지로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const GroupListPage()),
+                      );
+                    },
+                    child: Card(
+                      elevation: 4,
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            Icon(Icons.featured_play_list_outlined, size: 40, color: Colors.black),
                             SizedBox(height: 5),
                             Text(
-                              'Enter a code to join an existing group',
+                              '그룹 리스트',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              '                                                            ',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.black54),
                             ),

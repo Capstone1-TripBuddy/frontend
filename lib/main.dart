@@ -32,9 +32,9 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      //home: DashboardPage(), //나중에 splash page 추가
-      home: const WelcomePage(),
-
+        //home: const DashboardPage(), //나중에 splash page 추가
+      //home: const WelcomePage(),
+      home: const GroupPage(),
     );
   }
 }

@@ -31,7 +31,7 @@ class WelcomePage extends StatelessWidget {
                 const Icon(Icons.flight_takeoff, color: Colors.white, size: 48),
                 const SizedBox(height: 16),
                 const Text(
-                  'Welcome to TripBuddy',
+                  'TripBuddy',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -41,7 +41,7 @@ class WelcomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Your journey begins here',
+                  '추억을 공유해봐요',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 16,
@@ -75,7 +75,7 @@ class WelcomePage extends StatelessWidget {
                         Icon(Icons.login, color: Colors.white),
                         SizedBox(width: 8),
                         Text(
-                          'Login',
+                          '로그인',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -110,7 +110,7 @@ class WelcomePage extends StatelessWidget {
                         Icon(Icons.person_add, color: Colors.white),
                         SizedBox(width: 8),
                         Text(
-                          'Sign Up',
+                          '회원가입',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,

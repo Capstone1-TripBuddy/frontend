@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trip_buddy/welcome/sign_up_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -43,7 +44,7 @@ class LoginPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   // 이메일 입력 필드
                   const Text(
-                    'Email',
+                    '이메일',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -61,7 +62,7 @@ class LoginPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Password',
+                        '비밀번호',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       GestureDetector(
@@ -69,7 +70,7 @@ class LoginPage extends StatelessWidget {
                           // 비밀번호 찾기 페이지로 이동
                         },
                         child: const Text(
-                          'Forgot Password?',
+                          '비밀번호 찾기',
                           style: TextStyle(
                             color: Colors.grey,
                             decoration: TextDecoration.underline,
@@ -105,7 +106,7 @@ class LoginPage extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.login, color: Colors.white),
                       label: const Text(
-                        'Login',
+                        '로그인',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -116,9 +117,13 @@ class LoginPage extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () {
                         // 회원가입 페이지로 이동
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SignUpPage()),
+                        );
                       },
                       child: const Text(
-                        "Don't have an account? Sign up",
+                        "회원가입 하기",
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
