@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/welcome/login_page.dart';
-import 'package:trip_buddy/welcome/sign_up_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -55,10 +53,7 @@ class WelcomePage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // 로그인 페이지로 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginPage()),
-                      );
+                      Navigator.pushNamed(context, '/login');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -92,10 +87,7 @@ class WelcomePage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // 회원가입 페이지로 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignUpPage()),
-                      );
+                      Navigator.pushNamed(context, '/sign_up');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,

@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/dashboard.dart';
-import 'package:trip_buddy/group/group_page.dart';
-import 'package:trip_buddy/welcome/welcome_page.dart';
-import 'category/categories.dart';
+import 'package:provider/provider.dart';
+
+import 'group/fetch_group.dart';
+import 'dashboard.dart';
+
+import 'welcome/login_page.dart';
+import 'welcome/user_provider.dart';
+import 'welcome/welcome_page.dart';
+import 'welcome/sign_up_page.dart';
+
+import 'group/group_page.dart';
+import 'group/create_group_page.dart';
+import 'group/group_list_page.dart';
+import 'group/join_group_page.dart';
 
 void main() {
   runApp(
-    const MyApp()
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -32,9 +47,21 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const WelcomePage(),
+        '/login': (context) => const LoginPage(),
+        '/sign_up': (context) => const SignUpPage(),
+
+        '/group': (context) => const GroupPage(),
+        '/create_group': (context) => const CreateGroupPage(),
+        '/join_group': (context) => const JoinGroupPage(),
+        '/group_list': (context) => const GroupListPage(),
+      },
         //home: const DashboardPage(), //나중에 splash page 추가
-      //home: const WelcomePage(),
-      home: const GroupPage(),
+
+      //home: const GroupPage(),
+
     );
   }
 }

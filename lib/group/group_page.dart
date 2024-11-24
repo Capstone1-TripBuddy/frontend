@@ -29,7 +29,7 @@ class GroupPage extends StatelessWidget{
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Travel Group',
+                    '우리의 여행',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.black,
@@ -43,10 +43,7 @@ class GroupPage extends StatelessWidget{
                     onTap: () {
                       // 그룹 생성 페이지로 이동
                       // GroupPage에서 Create Group 버튼을 눌렀을 때 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CreateGroupPage()),
-                      );
+                      Navigator.pushNamed(context, '/create_group');
                     },
                     child: Card(
                       elevation: 4,
@@ -61,7 +58,7 @@ class GroupPage extends StatelessWidget{
                             Icon(Icons.add_circle, size: 40, color: Colors.black),
                             SizedBox(height: 5),
                             Text(
-                              '그룹 생성',
+                              '여행 생성',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -83,10 +80,7 @@ class GroupPage extends StatelessWidget{
                   GestureDetector(
                     onTap: () {
                       // 그룹 참가 페이지로 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const JoinGroupPage()),
-                      );
+                      Navigator.pushNamed(context, '/join_group');
                     },
                     child: Card(
                       elevation: 4,
@@ -101,7 +95,7 @@ class GroupPage extends StatelessWidget{
                             Icon(Icons.vpn_key, size: 40, color: Colors.black),
                             SizedBox(height: 5),
                             Text(
-                              '그룹 참가',
+                              '여행 참가',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -142,7 +136,7 @@ class GroupPage extends StatelessWidget{
                             Icon(Icons.featured_play_list_outlined, size: 40, color: Colors.black),
                             SizedBox(height: 5),
                             Text(
-                              '그룹 리스트',
+                              '여행 리스트',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

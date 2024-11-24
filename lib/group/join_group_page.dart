@@ -1,7 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trip_buddy/dashboard.dart';
 
-class JoinGroupPage extends StatelessWidget {
+import '../welcome/user_provider.dart';
+import 'fetch_group.dart';
+import 'group_provider.dart';
+
+class JoinGroupPage extends StatefulWidget {
   const JoinGroupPage({super.key});
+
+  @override
+  State<JoinGroupPage> createState() => _JoinGroupPageState();
+}
+
+class _JoinGroupPageState extends State<JoinGroupPage> {
+  final TextEditingController _inviteCodeController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleJoinGroup() async {
+    final inviteCode = _inviteCodeController.text.trim();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    if (inviteCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('초대 코드를 입력해주세요.')),
+      );
+      return;
+    }
+
+    final userId = userProvider.userData?['userId'];
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('사용자 정보가 없습니다. 다시 로그인 해주세요.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final groupData = await joinGroup(userId, inviteCode);
+
+      if (!mounted) return;
+      // 그룹 데이터 저장
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      groupProvider.setGroupData(groupData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('그룹 "${groupData['groupName']}"에 참가했습니다!')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardPage(groupId: groupData['id'])),
+      );
+       // 그룹 참가 완료 후 대쉬보드로 넘어가기
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('그룹 참가 실패: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _inviteCodeController.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +96,14 @@ class JoinGroupPage extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.popUntil(context, ModalRoute.withName('/group'));
                     },
                   ),
                   const SizedBox(height: 8),
                   // 페이지 제목
                   const Center(
                     child: Text(
-                      'Join Your Group',
+                      'Join Your Travel',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -42,52 +113,37 @@ class JoinGroupPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   // 그룹 이름 입력 필드
                   const Text(
-                    'Group Name',
+                    '초대 코드',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   TextField(
+                    controller: _inviteCodeController,
                     decoration: InputDecoration(
-                      hintText: 'Enter group name',
+                      hintText: 'Enter travel invite code',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // 비밀번호 입력 필드 (옵션)
-                  const Text(
-                    'Password',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Enter a group password',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 40),
                   // 그룹 참가 버튼
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // 그룹 참가 이후 로직 추가
-                      },
+                      onPressed:_isLoading ? null : _handleJoinGroup,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        foregroundColor: Colors.blue, // 버튼 색상
-                        backgroundColor: Colors.white, // 텍스트 색상
+                        backgroundColor: _isLoading ? Colors.grey : Colors.blue,
                       ),
-                      child: const Text(
-                        'Join Group',
-                        style: TextStyle(fontSize: 16),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                        '여행 참가',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
                     ),
                   ),

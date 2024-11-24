@@ -1,8 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/welcome/sign_up_page.dart';
+import 'package:provider/provider.dart';
 
-class LoginPage extends StatelessWidget {
+import 'user_provider.dart';
+import 'fetch_user.dart';
+
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false; // 로딩 상태
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이메일과 비밀번호를 입력해주세요.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await loginUser(email, password, userProvider.setUserData);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('로그인 성공!')),
+      );
+      Navigator.pushNamed(context, '/group');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +76,13 @@ class LoginPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      Navigator.popUntil(context, ModalRoute.withName('/'));
+                    },
+                  ),
+                  const SizedBox(height: 8),
                   const Center(
                     child: Text(
                       'Welcome Back',
@@ -49,6 +110,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   TextField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                       hintText: 'name@example.com',
                       border: OutlineInputBorder(
@@ -58,14 +120,14 @@ class LoginPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   // 비밀번호 입력 필드와 "Forgot Password?" 링크
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         '비밀번호',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      GestureDetector(
+                      /*GestureDetector(
                         onTap: () {
                           // 비밀번호 찾기 페이지로 이동
                         },
@@ -76,11 +138,12 @@ class LoginPage extends StatelessWidget {
                             decoration: TextDecoration.underline,
                           ),
                         ),
-                      ),
+                      ),*/
                     ],
                   ),
                   const SizedBox(height: 8),
                   TextField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: 'Enter your password',
@@ -94,9 +157,7 @@ class LoginPage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // 로그인 로직 추가
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: Colors.black,
@@ -117,10 +178,7 @@ class LoginPage extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () {
                         // 회원가입 페이지로 이동
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SignUpPage()),
-                        );
+                        Navigator.pushReplacementNamed(context, '/sign_up');
                       },
                       child: const Text(
                         "회원가입 하기",

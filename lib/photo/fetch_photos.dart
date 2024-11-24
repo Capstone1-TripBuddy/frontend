@@ -1,34 +1,70 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = 'https://bb07-219-255-207-130.ngrok-free.app';
+const String serverUrl = ''; // 서버 URL
 
-Future<List<Uint8List>> fetchCategoryImageBytes(String category) async {
-  final response = await http.post(
-    Uri.parse('$serverUrl/api/albums/download'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'category': category}),
-  );
-  print('Response body for category $category: ${response.body}');
-  if (response.statusCode == 200) {
-    try {
-      final data = jsonDecode(response.body);
+/// 서버에서 이미지를 가져오는 함수
+Future<List<String>> fetchImages(String albumName) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$serverUrl/api/albums'), // 서버의 API 엔드포인트
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'albumName': albumName}), // 요청 본문에 albumName 추가
+    );
 
-      // JSON에 'images' 필드가 없거나 빈 경우
-      if (data['images'] == null || data['images'].isEmpty) {
-        print('No images available for category $category');
-        return [];
-      }
-
-      List<String> base64Images = List<String>.from(data['images']);
-      return base64Images.map((base64) => base64Decode(base64)).toList();
-    } catch (e) {
-      // JSON 파싱 중 오류가 발생한 경우 처리
-      print('Error parsing JSON for category $category: $e');
-      throw Exception('Invalid JSON format for category $category');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body); // JSON 디코딩
+      return data.map((url) => url as String).toList(); // URL 리스트로 변환
+    } else {
+      throw Exception('Failed to fetch images. Status code: ${response.statusCode}');
     }
-  } else {
-    throw Exception('Failed to load image bytes for category $category');
+  } catch (e) {
+    throw Exception('이미지 fetch 실패: $e');
+  }
+}
+
+/// 그룹 ID를 기반으로 앨범 데이터를 가져오는 함수
+Future<List<Map<String, dynamic>>> fetchAlbumsByGroupId(int groupId) async {
+  final uri = Uri.parse('$serverUrl/api/albums/$groupId');
+
+  try {
+    final response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+
+    if (response.statusCode == 200) {
+      // 서버에서 받아온 JSON 데이터를 파싱하여 리스트로 반환
+      final List<dynamic> data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Failed to fetch albums. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching albums: $e');
+  }
+}
+///사진을 업로드하는 함수
+Future<bool> uploadImages(List<File> imageFiles, {required String groupId, required String creatorId}) async {
+  try {
+    final uri = Uri.parse('$serverUrl/api/photos/upload');
+    var request = http.MultipartRequest('POST', uri);
+
+    request.fields['groupId'] = groupId;
+    request.fields['creatorId'] = creatorId;
+
+    for (var file in imageFiles) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'photos', // 서버에서 기대하는 필드 이름
+        file.path,
+      ));
+    }
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception('Failed to upload images. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error uploading images: $e');
   }
 }

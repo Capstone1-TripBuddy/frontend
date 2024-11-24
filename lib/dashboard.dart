@@ -1,10 +1,42 @@
 import 'package:flutter/material.dart';
-import 'category/categories.dart';
+import 'category/category_page.dart';
+import 'photo/fetch_photos.dart';
 import 'photo/photo_upload_page.dart';
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class DashboardPage extends StatefulWidget {
+  final int groupId;
+  const DashboardPage({super.key, required this.groupId});
 
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  List<Map<String, dynamic>> _albums = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAlbums();
+  }
+
+  Future<void> _loadAlbums() async {
+    try {
+      final albums = await fetchAlbumsByGroupId(widget.groupId);
+      setState(() {
+        _albums = albums;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading albums: $e')),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +48,7 @@ class DashboardPage extends StatelessWidget {
             return IconButton(
               icon: const Icon(Icons.menu, color: Colors.black),
               onPressed: () {
-                // 사이드바 열기 로직
+                /// 사이드바 열기 로직
                 Scaffold.of(context).openDrawer();
               },
             );
@@ -49,14 +81,14 @@ class DashboardPage extends StatelessWidget {
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: Colors.white),
               accountName: const Text(
-                'John Doe',
+                '조',
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               accountEmail: Text(
-                '@johndoe',
+                '@joooo',
                 style: TextStyle(
                   color: Colors.grey[600],
                 ),
@@ -114,8 +146,9 @@ class DashboardPage extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 13,
+                childAspectRatio: 3,
                 children: [
                   _buildCategoryCard(
                     context,
@@ -150,21 +183,21 @@ class DashboardPage extends StatelessWidget {
               const SizedBox(height: 16),
               _buildPhotoFeedItem(
                 context,
-                'Jane Smith',
-                'Bali, Indonesia',
+                '조',
+                '훗카이도',
                 'Amazing sunset at the beach! 🌅',
                 'assets/images/background.jpg',
-                234,
                 2,
+                1,
               ),
               _buildPhotoFeedItem(
                 context,
-                'John Doe',
-                'Paris, France',
+                '도',
+                '훗카이도',
                 'Beautiful shot!',
                 'assets/images/background.jpg',
-                189,
-                4,
+                3,
+                1,
               ),
             ],
           ),
@@ -177,6 +210,10 @@ class DashboardPage extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // 해당 카테고리 상세 페이지로 이동
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CategoryPage(categoryName: title)),
+        );
       },
       child: Card(
         elevation: 4,
@@ -205,7 +242,7 @@ class DashboardPage extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
