@@ -14,39 +14,39 @@ class _GroupListPageState extends State<GroupListPage> {
 
   void _deleteGroup(
       BuildContext context, GroupProvider groupProvider, int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('그룹 삭제'),
-        content: const Text('이 그룹을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('그룹 삭제'),
+            content: const Text('이 그룹을 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // 삭제 로직
+                  setState(() {
+                    groupProvider.removeGroup(index); // 그룹 삭제
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('그룹이 삭제되었습니다.')),
+                  );
+                },
+                child: const Text('삭제'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              // 삭제 로직
-              setState(() {
-                groupProvider.removeGroup(index); // 그룹 삭제
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('그룹이 삭제되었습니다.')),
-              );
-            },
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
-    );
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     final groupProvider = Provider.of<GroupProvider>(context);
     final groups = groupProvider.groupData?['joinedGroups'] ?? [];
-
+    print(groups);
     return Scaffold(
       backgroundColor: Colors.grey[100], // 배경색
       body: Center(

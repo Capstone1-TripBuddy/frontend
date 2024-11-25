@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = ''; // 서버 URL
+const String serverUrl = 'https://6990-58-236-125-163.ngrok-free.app'; // 서버 URL
 /// 회원가입 요청 함수
 Future<String> signUpUser(String name, String email, String password) async {
   try {

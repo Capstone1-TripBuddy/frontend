@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = ''; // 서버 URL
+const String serverUrl = 'https://6990-58-236-125-163.ngrok-free.app'; // 서버 URL
 
 /// 그룹 생성 요청 함수
 Future<Map<String, dynamic>> createGroup(String groupName, int creatorId) async {
   try {
-    final uri = Uri.parse('$serverUrl/api/groups/create');
+    final uri = Uri.parse('$serverUrl/api/groups');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -31,7 +31,7 @@ Future<Map<String, dynamic>> createGroup(String groupName, int creatorId) async 
 /// 그룹 참가 요청 함수
 Future<Map<String, dynamic>> joinGroup(int userId, String inviteCode) async {
   try {
-    final uri = Uri.parse('$serverUrl/api/groups/join');
+    final uri = Uri.parse('$serverUrl/api/groups/members');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},

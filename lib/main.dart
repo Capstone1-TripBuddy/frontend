@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'group/fetch_group.dart';
-import 'dashboard.dart';
-
 import 'welcome/login_page.dart';
 import 'welcome/user_provider.dart';
 import 'welcome/welcome_page.dart';
 import 'welcome/sign_up_page.dart';
 
+import 'group/group_provider.dart';
 import 'group/group_page.dart';
 import 'group/create_group_page.dart';
 import 'group/group_list_page.dart';
@@ -19,6 +17,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => GroupProvider()),
       ],
       child: const MyApp(),
     ),
@@ -57,8 +56,10 @@ class MyApp extends StatelessWidget {
         '/create_group': (context) => const CreateGroupPage(),
         '/join_group': (context) => const JoinGroupPage(),
         '/group_list': (context) => const GroupListPage(),
+
+        //'/dashboard' : (context) => const DashboardPage(groupId: 1)
       },
-        //home: const DashboardPage(), //나중에 splash page 추가
+        //나중에 splash page 추가
 
       //home: const GroupPage(),
 

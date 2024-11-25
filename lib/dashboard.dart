@@ -111,6 +111,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('그룹 리스트'),
               onTap: () {
                 // 그룹 관리 페이지로 이동
+                Navigator.popUntil(context, ModalRoute.withName('/group'));
               },
             ),
             const Divider(),

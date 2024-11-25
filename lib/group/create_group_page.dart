@@ -50,12 +50,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('그룹이 성공적으로 생성되었습니다!')),
       );
-
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => InviteCodePage(inviteCode: groupData['inviteCode']),
-          settings: const RouteSettings(name: '/invite_code'),
         ),
       );// 그룹 생성 완료 후 이전 페이지로 이동
     } catch (e) {

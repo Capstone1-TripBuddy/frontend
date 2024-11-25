@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = ''; // 서버 URL
+const String serverUrl = 'https://6990-58-236-125-163.ngrok-free.app'; // 서버 URL
 
 /// 서버에서 이미지를 가져오는 함수
 Future<List<String>> fetchImages(String albumName) async {
