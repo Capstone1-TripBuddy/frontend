@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/dashboard.dart';
+import 'package:trip_buddy/main/dashboard.dart';
 
 import '../welcome/user_provider.dart';
 import 'fetch_group.dart';
@@ -53,7 +53,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => DashboardPage(groupId: groupData['id'])),
+        MaterialPageRoute(builder: (context) => DashboardPage(groupId: groupData['id'], userId: userId,)),
       );
        // 그룹 참가 완료 후 대쉬보드로 넘어가기
     } catch (e) {

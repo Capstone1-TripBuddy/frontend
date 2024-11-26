@@ -1,20 +1,33 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 const String serverUrl = 'https://6990-58-236-125-163.ngrok-free.app'; // 서버 URL
 /// 회원가입 요청 함수
-Future<String> signUpUser(String name, String email, String password) async {
+Future<String> signUpUser(String name, String email, String password, File? profileImage) async {
   try {
     final uri = Uri.parse('$serverUrl/api/users/signup'); // API 엔드포인트
+
+    ///File -> byte로 변경
+    String? base64ProfileImage;
+    if (profileImage != null) {
+      List<int> imageBytes = await profileImage.readAsBytes();
+      base64ProfileImage = base64Encode(imageBytes);
+    }
+    final Map<String, dynamic> body = {
+      'name': name,
+      'email': email,
+      'password': password,
+    };
+    if (base64ProfileImage != null) {
+      body['profilePicture'] = base64ProfileImage;
+    }
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'password': password,
-      }),
+      body: jsonEncode(body),
     );
+
 
     if (response.statusCode == 201) {
       return '회원가입 성공';

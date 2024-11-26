@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/dashboard.dart';
+import 'package:trip_buddy/main/dashboard.dart';
 import 'group_provider.dart';
+import '../welcome/user_provider.dart';
 
 class GroupListPage extends StatefulWidget {
   const GroupListPage({super.key});
@@ -46,7 +47,8 @@ class _GroupListPageState extends State<GroupListPage> {
   Widget build(BuildContext context) {
     final groupProvider = Provider.of<GroupProvider>(context);
     final groups = groupProvider.groupData?['joinedGroups'] ?? [];
-    print(groups);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.userData?['userId'];
     return Scaffold(
       backgroundColor: Colors.grey[100], // 배경색
       body: Center(
@@ -99,7 +101,7 @@ class _GroupListPageState extends State<GroupListPage> {
                           // 대시보드로 이동
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => DashboardPage(groupId: group['id'],)),
+                            MaterialPageRoute(builder: (context) => DashboardPage(groupId: group['id'],userId: userId,)),
                           );
                         },
                         trailing: IconButton(

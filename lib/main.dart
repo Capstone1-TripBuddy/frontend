@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'main/profile_page.dart';
+
 import 'welcome/login_page.dart';
 import 'welcome/user_provider.dart';
 import 'welcome/welcome_page.dart';
@@ -46,12 +48,12 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      initialRoute: '/',
+      initialRoute: '/profile',
       routes: {
         '/': (context) => const WelcomePage(),
         '/login': (context) => const LoginPage(),
         '/sign_up': (context) => const SignUpPage(),
-
+        '/profile' : (context) => const ProfilePage(),
         '/group': (context) => const GroupPage(),
         '/create_group': (context) => const CreateGroupPage(),
         '/join_group': (context) => const JoinGroupPage(),

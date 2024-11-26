@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'fetch_user.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -14,6 +16,18 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false; // 로딩 상태
+
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickProfileImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
 
   Future<void> _handleSignUp() async {
     final name = _nameController.text.trim();
@@ -39,7 +53,7 @@ class _SignUpPageState extends State<SignUpPage> {
       _isLoading = true;
     });
 
-    final result = await signUpUser(name, email, password);
+    final result = await signUpUser(name, email, password, _profileImage);
 
     setState(() {
       _isLoading = false;
@@ -104,6 +118,52 @@ class _SignUpPageState extends State<SignUpPage> {
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickProfileImage,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                  colors: [
+                                    Color(0xffF7FE2E),
+                                    Color(0xffFA5882),
+                                    Color(0xff2EFEC8),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(70),
+                              ),
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundImage: _profileImage != null
+                                    ? FileImage(_profileImage!)
+                                    : null,
+                                backgroundColor: Colors.grey[200],
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 8,
+                              child: ElevatedButton(
+                                onPressed: _pickProfileImage,
+                                style: ElevatedButton.styleFrom(
+                                  shape: const CircleBorder(),
+                                  padding: const EdgeInsets.all(8),
+                                  backgroundColor: Colors.black,
+                                ),
+                                child: const Icon(Icons.upload, color: Colors.white),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

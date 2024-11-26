@@ -23,25 +23,6 @@ Future<List<String>> fetchImages(String albumName) async {
     throw Exception('이미지 fetch 실패: $e');
   }
 }
-
-/// 그룹 ID를 기반으로 앨범 데이터를 가져오는 함수
-Future<List<Map<String, dynamic>>> fetchAlbumsByGroupId(int groupId) async {
-  final uri = Uri.parse('$serverUrl/api/albums/$groupId');
-
-  try {
-    final response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-
-    if (response.statusCode == 200) {
-      // 서버에서 받아온 JSON 데이터를 파싱하여 리스트로 반환
-      final List<dynamic> data = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(data);
-    } else {
-      throw Exception('Failed to fetch albums. Status code: ${response.statusCode}');
-    }
-  } catch (e) {
-    throw Exception('Error fetching albums: $e');
-  }
-}
 ///사진을 업로드하는 함수
 Future<bool> uploadImages(List<File> imageFiles, {required String groupId, required String creatorId}) async {
   try {

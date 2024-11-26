@@ -43,7 +43,6 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
     try {
       final uri = Uri.parse('$serverUrl/api/albums/upload');
       var request = http.MultipartRequest('POST', uri);
-
       request.fields['groupId'] = '1';
       request.fields['userId'] = '1';
 

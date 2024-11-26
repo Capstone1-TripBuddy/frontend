@@ -127,18 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                         '비밀번호',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      /*GestureDetector(
-                        onTap: () {
-                          // 비밀번호 찾기 페이지로 이동
-                        },
-                        child: const Text(
-                          '비밀번호 찾기',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),*/
                     ],
                   ),
                   const SizedBox(height: 8),

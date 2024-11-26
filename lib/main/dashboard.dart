@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'category/category_page.dart';
-import 'photo/fetch_photos.dart';
+import 'album/album_page.dart';
+import 'album/fetch_album.dart';
 import 'photo/photo_upload_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final int groupId;
-  const DashboardPage({super.key, required this.groupId});
+  final int userId;
+  const DashboardPage({super.key, required this.groupId, required this.userId});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -129,91 +130,80 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '카테고리',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 13,
-                childAspectRatio: 3,
+      body:  _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCategoryCard(
-                    context,
-                    '풍경',
-                    'assets/images/background.jpg',
+                  const Text(
+                    '카테고리',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildCategoryCard(
-                    context,
-                    '사람',
-                    'assets/images/background.jpg',
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 13,
+                    childAspectRatio: 1,
                   ),
-                  _buildCategoryCard(
-                    context,
-                    '음식',
-                    'assets/images/background.jpg',
-                  ),
-                  _buildCategoryCard(
-                    context,
-                    '동물',
-                    'assets/images/background.jpg',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                '사진 피드',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  itemCount: _albums.length,
+                  itemBuilder: (context, index) {
+                    final album = _albums[index];
+                    return _buildAlbumCard(
+                      context,
+                      album['title'],
+                      album['titlePicture'], // URL이 없을 경우 기본 이미지로 처리
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildPhotoFeedItem(
-                context,
-                '조',
-                '훗카이도',
-                'Amazing sunset at the beach! 🌅',
-                'assets/images/background.jpg',
-                2,
-                1,
-              ),
-              _buildPhotoFeedItem(
-                context,
-                '도',
-                '훗카이도',
-                'Beautiful shot!',
-                'assets/images/background.jpg',
-                3,
-                1,
-              ),
-            ],
+                const SizedBox(height: 32),
+                const Text(
+                  '사진 피드',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildPhotoFeedItem(
+                  context,
+                  '조',
+                  '훗카이도',
+                  'Amazing sunset at the beach! 🌅',
+                  'assets/images/background.jpg',
+                  2,
+                  1,
+                ),
+                _buildPhotoFeedItem(
+                  context,
+                  '도',
+                  '훗카이도',
+                  'Beautiful shot!',
+                  'assets/images/background.jpg',
+                  3,
+                  1,
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, String title, String imagePath) {
+  Widget _buildAlbumCard(BuildContext context, String title, String? titlePicture) {
     return GestureDetector(
       onTap: () {
         // 해당 카테고리 상세 페이지로 이동
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => CategoryPage(categoryName: title)),
+          MaterialPageRoute(builder: (context) => AlbumPage(albumName: title)),
         );
       },
       child: Card(
@@ -225,17 +215,18 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                imagePath,
+              child: titlePicture != null
+                  ? Image.network(
+                titlePicture,
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.black.withOpacity(0.4),
+              )
+                  : Image.asset(
+                'assets/images/default_album.PNG', // 기본 이미지
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
             Center(

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/photo/fetch_photos.dart';
+import '../photo/fetch_photos.dart';
 
 
-class CategoryPage extends StatefulWidget {
-  final String categoryName;
-  const CategoryPage({super.key, required this.categoryName});
+class AlbumPage extends StatefulWidget {
+  final String albumName;
+  const AlbumPage({super.key, required this.albumName});
 
   @override
-  State<CategoryPage> createState() => _CategoryPageState();
+  State<AlbumPage> createState() => _AlbumPageState();
 }
 
-class _CategoryPageState extends State<CategoryPage> {
+class _AlbumPageState extends State<AlbumPage> {
   List<String> _imageUrls = []; // 서버에서 받은 이미지 URL 리스트
   bool _isLoading = true; // 로딩 상태 관리
   bool _isError = false; // 에러 상태 관리
@@ -23,7 +23,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
   Future<void> _loadImages() async {
     try {
-      final images = await fetchImages(widget.categoryName); // fetchImages 호출
+      final images = await fetchImages(widget.albumName); // fetchImages 호출
       setState(() {
         _imageUrls = images;
         _isLoading = false;
@@ -41,7 +41,7 @@ class _CategoryPageState extends State<CategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.categoryName),
+        title: Text(widget.albumName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
