@@ -34,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await loginUser(email, password, userProvider.setUserData);
+      userProvider.updateUserData({'email': email});
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(

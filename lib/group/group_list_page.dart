@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/main/dashboard.dart';
+import 'package:trip_buddy/main/dashboard_page.dart';
 import 'group_provider.dart';
 import '../welcome/user_provider.dart';
 

@@ -8,9 +8,12 @@ class UserProvider with ChangeNotifier {
     _userData = data;
     notifyListeners(); // 상태 변경 알림
   }
-
   void clearUserData() {
     _userData = null;
+    notifyListeners();
+  }
+  void updateUserData(Map<String, dynamic> updatedData) {
+    userData?.addAll(updatedData);
     notifyListeners();
   }
 }

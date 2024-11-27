@@ -1,15 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../welcome/user_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  File? _newProfileImage; // 새로 선택된 프로필 이미지
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickNewProfileImage(BuildContext context) async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _newProfileImage = File(pickedFile.path);
+      });
+
+      // userProvider를 사용해 사용자 데이터 업데이트
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.updateUserData({'profilePicture': pickedFile.path});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('프로필 사진이 업데이트되었습니다.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userName = userProvider.userData?['name'];
-    final userEmail = userProvider.userData?['email'];
+    final String userName = userProvider.userData?['name'];
+    final String userEmail = userProvider.userData?['email'];
+    final String? userProfile = userProvider.userData?['profilePicture'];
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Center(
@@ -41,17 +68,17 @@ class ProfilePage extends StatelessWidget {
                       CircleAvatar(
                         radius: 100,
                         backgroundColor: Colors.grey[300],
-                        backgroundImage: const AssetImage(
-                          'assets/images/profilebase.PNG', //
-                        ),
+                        backgroundImage: _newProfileImage != null
+                            ? FileImage(_newProfileImage!) // 새로 선택된 이미지
+                            : (userProfile != null && userProfile.isNotEmpty
+                            ? NetworkImage(userProfile) as ImageProvider
+                            : const AssetImage('assets/images/profilebase.PNG')),
                       ),
                       Positioned(
                         bottom: 0,
                         right: 30,
                         child: GestureDetector(
-                          onTap: () {
-                            // 프로필 수정 로직
-                          },
+                          onTap: () => _pickNewProfileImage(context),
                           child: const CircleAvatar(
                             radius: 20,
                             backgroundColor: Colors.black,
@@ -62,25 +89,25 @@ class ProfilePage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    '홍길동',
-                    style: TextStyle(
+                  Text(
+                    userName,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'john@example.com',
-                    style: TextStyle(
+                  Text(
+                    userEmail,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  /*ElevatedButton(
                     onPressed: () {
-                      // 프로필 수정
+                      // 프로필 저장
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -97,7 +124,7 @@ class ProfilePage extends StatelessWidget {
                         color: Colors.black,
                       ),
                     ),
-                  ),
+                  ),*/
                 ],
               ),
             ),

@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
-const String serverUrl = 'https://6990-58-236-125-163.ngrok-free.app';
+const String serverUrl = '';
 
 class PhotoUploadPage extends StatefulWidget {
-  const PhotoUploadPage({super.key});
+  final int groupId;
+  final int userId;
+  const PhotoUploadPage({super.key, required this.groupId, required this.userId});
 
   @override
   _PhotoUploadPageState createState() => _PhotoUploadPageState();
@@ -43,8 +45,8 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
     try {
       final uri = Uri.parse('$serverUrl/api/albums/upload');
       var request = http.MultipartRequest('POST', uri);
-      request.fields['groupId'] = '1';
-      request.fields['userId'] = '1';
+      request.fields['groupId'] = widget.groupId as String;
+      request.fields['userId'] = widget.userId as String;
 
       for (var file in _selectedImages) {
         request.files.add(await http.MultipartFile.fromPath(

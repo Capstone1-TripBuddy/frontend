@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:trip_buddy/main/notification_page.dart';
 
 import 'main/profile_page.dart';
 
@@ -48,18 +49,17 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.grey[50],
       ),
-      initialRoute: '/profile',
+      initialRoute: '/notification',
       routes: {
         '/': (context) => const WelcomePage(),
         '/login': (context) => const LoginPage(),
         '/sign_up': (context) => const SignUpPage(),
-        '/profile' : (context) => const ProfilePage(),
+        '/profile': (context) => const ProfilePage(),
         '/group': (context) => const GroupPage(),
         '/create_group': (context) => const CreateGroupPage(),
         '/join_group': (context) => const JoinGroupPage(),
         '/group_list': (context) => const GroupListPage(),
-
-        //'/dashboard' : (context) => const DashboardPage(groupId: 1)
+        '/notification': (context) => const NotificationPage(),
       },
         //나중에 splash page 추가
 
