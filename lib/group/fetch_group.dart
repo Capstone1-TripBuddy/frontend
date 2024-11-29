@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = ''; // 서버 URL
+const String serverUrl = 'https://c610-58-236-125-163.ngrok-free.app'; // 서버 URL
 
 /// 그룹 생성 요청 함수
 Future<Map<String, dynamic>> createGroup(String groupName, int creatorId) async {
@@ -15,7 +15,7 @@ Future<Map<String, dynamic>> createGroup(String groupName, int creatorId) async 
         'creatorId': creatorId,
       }),
     );
-
+    print('Response Data: ${response.body}');
     if (response.statusCode == 201) {
       // 그룹 생성 성공
       return jsonDecode(response.body);
@@ -51,5 +51,34 @@ Future<Map<String, dynamic>> joinGroup(int userId, String inviteCode) async {
     }
   } catch (e) {
     throw Exception('그룹 참가 요청 중 오류가 발생했습니다: $e');
+  }
+}
+
+Future<List<Map<String, dynamic>>> fetchUserGroups(int userId) async {
+  final String url = '$serverUrl/api/groups/$userId';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+    print('Response Data: ${response.body}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      return data.map((group) {
+        return {
+          'id': group['id'] ?? 0,
+          'title': group['groupName'] ?? 'Untitled Group', // 기본값 설정
+          'creator':{
+            'userId': group['creator']?['userId'] ?? 0, // 기본값 설정
+            'name': group['creator']?['name'] ?? 'Unknown',
+          },
+          'createdAt': group['createdAt'] != null
+              ? DateTime.parse(group['createdAt'])
+              : DateTime.now(), // 기본값 설정
+        };
+      }).toList();
+    } else {
+      throw Exception('Failed to load groups: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching user groups: $e');
   }
 }

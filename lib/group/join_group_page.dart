@@ -47,13 +47,12 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
       // 그룹 데이터 저장
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       groupProvider.setGroupData(groupData);
-      groupProvider.addGroup(groupData);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('그룹 "${groupData['groupName']}"에 참가했습니다!')),
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => DashboardPage(groupId: groupData['id'], userId: userId,)),
+        MaterialPageRoute(builder: (context) => DashboardPage(groupId: groupData['id'], userId: userId)),
       );
        // 그룹 참가 완료 후 대쉬보드로 넘어가기
     } catch (e) {

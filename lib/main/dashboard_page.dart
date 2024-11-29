@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/welcome/user_provider.dart';
+import 'package:trip_buddy/main/notification_page.dart';
+import 'package:trip_buddy/main/profile_page.dart';
 
+import '../welcome/user_provider.dart';
 import '../group/group_provider.dart';
-import 'album/fetch_album.dart';
-import 'photo/photo_upload_page.dart';
+
+import 'photo_upload_page.dart';
 import 'photo_feed_page.dart';
+import 'fetch_main.dart';
 
 class DashboardPage extends StatefulWidget {
   final int groupId;
@@ -17,30 +20,80 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  List<Map<String, dynamic>> _albums = [];
+  List<Map<String, dynamic>> _photos = [];
+  List<Map<String, dynamic>> _members = [];
+  final List<Map<String, dynamic>> _tags = [
+    {'label': '풍경', 'icon': Icons.landscape},
+    {'label': '음식', 'icon': Icons.restaurant},
+    {'label': '동물', 'icon': Icons.pets},
+    {'label': '기타', 'icon': Icons.category},
+  ];
+
+  final List<int> _selectedMembers = []; // 선택된 멤버 ID
+  final List<String> _selectedTags = []; // 선택된 태그
+
   bool _isLoading = true;
+  bool _isLoadingMembers = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAlbums();
+    _loadPhotos();
+    _loadMembers();
   }
 
-  Future<void> _loadAlbums() async {
+  Future<void> _loadPhotos([String? tagFilter]) async {
+    setState(() => _isLoading = true);
+
     try {
-      final albums = await fetchAlbumsByGroupId(widget.groupId);
+      _photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: tagFilter);
+      //데이터 검증, null 처리
+      _photos = _photos.map((photo) {
+        return {
+          'fileName': photo['fileName'] ?? 'Unknown',
+          'fileUrl': photo['fileUrl'] ?? '',
+          'imageSize': photo['imageSize'],
+          'uploadDate': photo['uploadDate'] is String
+              ? DateTime.parse(photo['uploadDate'])
+              : photo['uploadDate'], // DateTime 타입인 경우 그대로 사용
+        };
+      }).toList();
+    } catch (e) {
+      if(!mounted)return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading photos: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMembers() async {
+    try {
+      // 서버와 통신하여 멤버 정보를 가져옵니다.
+      final members = await fetchGroupMembers(widget.groupId); // 서버 요청 함수
       setState(() {
-        _albums = albums;
-        _isLoading = false;
+        _members = members;
+        _isLoadingMembers = false;
+
       });
     } catch (e) {
       setState(() {
-        _isLoading = false;
+        _isLoadingMembers = false;
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading albums: $e')),
+        SnackBar(content: Text('Error loading group members: $e')),
       );
     }
+  }
+  void _leaveMemory(Map<String, dynamic> photo) {
+    // 메모 추가 기능 구현
+    print('Leave a memory for: ${photo['fileName']}');
+  }
+  void _downloadPhoto(Map<String, dynamic> photo) {
+    // 다운로드 로직 구현 (ex: url_launcher 사용 가능)
+    print('Download photo: ${photo['fileUrl']}');
   }
   @override
   Widget build(BuildContext context) {
@@ -51,7 +104,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final userName = userProvider.userData?['name'] ?? 'Guest'; // 기본값 설정
     final userEmail = userProvider.userData?['email'] ?? 'guest@example.com';
     final userProfile = userProvider.userData?['profilePicture'];
-
+    final groupedPhotos = _groupPhotosByDate();
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -76,7 +129,10 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: const Icon(Icons.notifications, color: Colors.black),
             onPressed: () {
               // 알림 기능 로직
-              Navigator.pushReplacementNamed(context, '/notification');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationPage()),
+              );
             },
           ),
           IconButton(
@@ -124,7 +180,10 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('프로필'),
               onTap: () {
                 // 프로필 페이지로 이동
-                Navigator.pushReplacementNamed(context, '/profile');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
               },
             ),
             // Group Management 메뉴
@@ -147,6 +206,7 @@ class _DashboardPageState extends State<DashboardPage> {
               onTap: () {
                 // 로그아웃 로직
                 userProvider.clearUserData();
+                groupProvider.clearGroupData();
                 Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('로그아웃되었습니다.')),
@@ -156,8 +216,16 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-      body:  _isLoading
+      body:  _isLoading || _isLoadingMembers
           ? const Center(child: CircularProgressIndicator())
+          : _photos.isEmpty
+          ? const Center(
+              child: Text(
+                '사진이 없습니다.\n사진을 업로드 해보세요!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -173,15 +241,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     scrollDirection: Axis.horizontal, // 가로로 스크롤 가능
                     child: Row(
                       children: [
-                        _buildCategoryButton('Landscape', Icons.landscape),
-                        const SizedBox(width: 6), // 버튼 간 간격
-                        _buildCategoryButton('Food', Icons.restaurant),
-                        const SizedBox(width: 6),
-                        _buildCategoryButton('Animals', Icons.pets),
-                        const SizedBox(width: 6),
-                        _buildCategoryButton('People', Icons.person),
-                        const SizedBox(width: 6),
-                        _buildCategoryButton('Others', Icons.category),
+                        // 멤버 버튼
+                        ..._buildMemberButtons(),
+                        // 태그 버튼
+                        ..._buildTagButtons(),
                       ],
                     ),
                   ),
@@ -189,12 +252,91 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: Colors.grey, // 선 색상
                     thickness: 1.0,     // 선 두께
                   ),
+                  const SizedBox(height: 6),
                   // 날짜 구분
-                  const Text(
-                    'June 15, 2023',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
+                  ...groupedPhotos.keys.map((date) {
+                    final photos = groupedPhotos[date]!;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(date, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 4,
+                            mainAxisSpacing: 4,
+                          ),
+                          itemCount: photos.length,
+                          itemBuilder: (context, index) {
+                            final photo = photos[index];
+                            return GestureDetector(
+                              onTap: () {
+                                // 사진 클릭 로직
+                                _showPhotoDialog(context, photos, index);
+                              },
+                              child: Stack(
+                                children: [
+                                  Image.network('${photo['fileUrl']}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                                  },
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  },
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'memory') {
+                                          _leaveMemory(photo); // 메모 남기기 로직
+                                        } else if (value == 'download') {
+                                          _downloadPhoto(photo); // 사진 다운로드 로직
+                                        }
+                                      },
+                                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                                      itemBuilder: (BuildContext context) => [
+                                        const PopupMenuItem(
+                                          value: 'memory',
+                                          child: ListTile(
+                                            leading: Icon(Icons.comment),
+                                            title: Text('Leave a Memory'),
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'download',
+                                          child: ListTile(
+                                            leading: Icon(Icons.download),
+                                            title: Text('Download'),
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'delete',
+                                          child: ListTile(
+                                            leading: Icon(Icons.delete, color: Colors.red),
+                                            title: Text('Delete'),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ]
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }),
               ],
             ),
           ),
@@ -212,32 +354,164 @@ class _DashboardPageState extends State<DashboardPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-  Widget _buildCategoryButton(String label, dynamic iconOrImage) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        // 카테고리 클릭 로직
-      },
-      icon: iconOrImage is IconData
-          ? Icon(iconOrImage, size: 16) // 아이콘인 경우
-          : ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          iconOrImage,
-          width: 16,
-          height: 16,
-          fit: BoxFit.cover,
-        ), // 이미지 URL인 경우
-      ),
-      label: Text(label, style: const TextStyle(fontSize: 12),),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 0,
-        side: const BorderSide(color: Colors.grey),
-      ),
-    );
+  // 멤버 버튼 리스트 생성
+  List<Widget> _buildMemberButtons() {
+    return _members.map((member) {
+      final isSelected = _selectedMembers.contains(member['id']);
+      final profilePicture = member['profilePicturePath']; // 기본 이미지 설정
+      return Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: ElevatedButton.icon(
+          onPressed: () {
+            setState(() {
+              if (isSelected) {
+                _selectedMembers.remove(member['id']);
+              } else {
+                _selectedMembers.add(member['id']);
+              }
+            });
+            _loadPhotos(member['id'].toString());
+          },
+          icon: CircleAvatar(
+            radius: 12,
+            backgroundImage: profilePicture != null && profilePicture.startsWith('http')
+                ? NetworkImage(profilePicture)
+                : const AssetImage('assets/images/profilebase.PNG') as ImageProvider,
+          ),
+          label: Text(
+            member['name'],
+            style: TextStyle(
+              fontSize: 12,
+              color: isSelected ? Colors.white : Colors.black,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+            backgroundColor: isSelected ? Colors.black : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+            side: const BorderSide(color: Colors.grey),
+          ),
+        ),
+      );
+    }).toList();
   }
 
+  // 태그 버튼 리스트 생성
+  List<Widget> _buildTagButtons() {
+    return _tags.map((tag) {
+      final isSelected = _selectedTags.contains(tag['label']);
+      final tagFilter = _mapTagToFilter(tag['label']);
+      return Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: ElevatedButton.icon(
+          onPressed: () {
+            setState(() {
+              if (isSelected) {
+                _selectedTags.remove(tag['label']);
+              } else {
+                _selectedTags.add(tag['label']);
+              }
+            });
+            _loadPhotos(tagFilter);
+          },
+          icon: Icon(
+            tag['icon'],
+            size: 12,
+            color: isSelected ? Colors.white : Colors.black,
+          ),
+          label: Text(
+            tag['label'],
+            style: TextStyle(
+              fontSize: 12,
+              color: isSelected ? Colors.white : Colors.black,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+            backgroundColor: isSelected ? Colors.black : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+            side: const BorderSide(color: Colors.grey),
+          ),
+        ),
+      );
+    }).toList();
+  }
+  Map<String, List<Map<String, dynamic>>> _groupPhotosByDate() {
+    final Map<String, List<Map<String, dynamic>>> groupedPhotos = {};
+    for (var photo in _photos) {
+      final date = photo['uploadDate'] != null
+          ? '${photo['uploadDate'].year}-${photo['uploadDate'].month}-${photo['uploadDate'].day}'
+          : 'Unknown Date';
+      if (!groupedPhotos.containsKey(date)) {
+        groupedPhotos[date] = [];
+      }
+      groupedPhotos[date]!.add(photo);
+    }
+    return groupedPhotos;
+  }
+}
+void _showPhotoDialog(BuildContext context, List<Map<String, dynamic>> photos, int initialIndex) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: const EdgeInsets.all(0),
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initialIndex),
+              itemCount: photos.length,
+              itemBuilder: (context, index) {
+                final photo = photos[index];
+                return InteractiveViewer(
+                  child: Image.network(
+                    '${photo['fileUrl']}',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.broken_image, size: 100, color: Colors.grey);
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 40,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+String _mapTagToFilter(String tag) {
+  switch (tag) {
+    case '풍경':
+      return 'sight';
+    case '음식':
+      return 'food';
+    case '동물':
+      return 'animal';
+    default:
+      return 'other';
+  }
 }

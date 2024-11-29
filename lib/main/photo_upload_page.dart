@@ -4,8 +4,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:exif/exif.dart';
 
-const String serverUrl = '';
+const String serverUrl = 'https://c610-58-236-125-163.ngrok-free.app';
 
 class PhotoUploadPage extends StatefulWidget {
   final int groupId;
@@ -18,18 +19,47 @@ class PhotoUploadPage extends StatefulWidget {
 
 class _PhotoUploadPageState extends State<PhotoUploadPage> {
   final ImagePicker _picker = ImagePicker();
-  List<File> _selectedImages = [];
+  List<Map<String, dynamic>> _selectedImages = [];
   bool _isUploading = false;
 
   Future<void> pickImages() async {
     final List<XFile>? pickedImages = await _picker.pickMultiImage();
 
     if (pickedImages != null) {
+      List<Map<String, dynamic>> imagesWithMetadata = [];
+      for (var xfile in pickedImages) {
+        File file = File(xfile.path);
+
+        // EXIF 데이터에서 촬영 시간 추출
+        String? takenAt = await _getTakenAt(file);
+
+        imagesWithMetadata.add({
+          'file': file,
+          'takenAt': takenAt ?? 'Unknown', // 촬영 시간 없으면 기본값
+        });
+      }
       setState(() {
-        _selectedImages = pickedImages.map((xfile) => File(xfile.path)).toList();
+        _selectedImages = imagesWithMetadata;
       });
     }
   }
+
+  Future<String?> _getTakenAt(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final tags = await readExifFromBytes(bytes);
+
+      if (tags.containsKey('Image DateTime')) {
+        return tags['Image DateTime']?.printable; // EXIF 촬영 시간
+      } else if (tags.containsKey('EXIF DateTimeOriginal')) {
+        return tags['EXIF DateTimeOriginal']?.printable;
+      }
+    } catch (e) {
+      print('Error reading EXIF data: $e');
+    }
+    return null;
+  }
+
   Future<void> requestPermissions() async {
     if (await Permission.photos.request().isGranted) {
       await pickImages();
@@ -37,7 +67,8 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
       print('사진 접근 권한이 필요합니다.');
     }
   }
-  Future<void> uploadImages(List<File> imageFiles) async {
+
+  Future<void> uploadImages() async {
     setState(() {
       _isUploading = true;
     });
@@ -45,15 +76,20 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
     try {
       final uri = Uri.parse('$serverUrl/api/albums/upload');
       var request = http.MultipartRequest('POST', uri);
-      request.fields['groupId'] = widget.groupId as String;
-      request.fields['userId'] = widget.userId as String;
+      request.fields['groupId'] = widget.groupId.toString();
+      request.fields['userId'] = widget.userId.toString();
 
-      for (var file in _selectedImages) {
+      for (var imageData in _selectedImages) {
+        File file = imageData['file'];
+        String takenAt = imageData['takenAt'];
+
         request.files.add(await http.MultipartFile.fromPath(
           'photos', // 서버에서 기대하는 필드 이름
           file.path,
         ));
+        request.fields['takenAt'] = takenAt; // 촬영 시간 추가
       }
+
       var response = await request.send();
       print(response.statusCode);
       if (!mounted) return;
@@ -195,7 +231,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.file(
-                                _selectedImages[index],
+                                _selectedImages[index]['file'],
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
@@ -211,7 +247,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _selectedImages.isNotEmpty
-                          ? () => uploadImages(_selectedImages)
+                          ? uploadImages
                           : null,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: _selectedImages.isNotEmpty

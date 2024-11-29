@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trip_buddy/group/group_list_page.dart';
-import 'package:trip_buddy/group/join_group_page.dart';
+import 'group_list_page.dart';
 
-import 'create_group_page.dart';
 
 class GroupPage extends StatelessWidget{
   const GroupPage({super.key});
@@ -118,10 +116,7 @@ class GroupPage extends StatelessWidget{
                   GestureDetector(
                     onTap: () {
                       // 그룹 리스트 페이지로 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const GroupListPage()),
-                      );
+                      Navigator.pushNamed(context, '/group_list');
                     },
                     child: Card(
                       elevation: 4,
