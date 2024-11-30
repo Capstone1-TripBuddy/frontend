@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/main/dashboard_page.dart';
-import 'package:trip_buddy/main/notification_page.dart';
-
-import 'main/profile_page.dart';
 
 import 'welcome/login_page.dart';
 import 'welcome/user_provider.dart';

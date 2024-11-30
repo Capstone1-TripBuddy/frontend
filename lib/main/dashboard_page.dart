@@ -109,10 +109,6 @@ class _DashboardPageState extends State<DashboardPage> {
     // 메모 추가 기능 구현
     print('Leave a memory for: ${photo['fileName']}');
   }
-  void _downloadPhoto(Map<String, dynamic> photo) {
-    // 다운로드 로직 구현 (ex: url_launcher 사용 가능)
-    print('Download photo: ${photo['fileUrl']}');
-  }
   @override
   Widget build(BuildContext context) {
     final groupProvider = Provider.of<GroupProvider>(context);
@@ -333,8 +329,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                               onSelected: (value) {
                                                 if (value == 'memory') {
                                                   _leaveMemory(photo); // 메모 남기기 로직
-                                                } else if (value == 'download') {
-                                                  _downloadPhoto(photo); // 사진 다운로드 로직
                                                 }
                                               },
                                               icon: const Icon(Icons.more_vert, color: Colors.white),
@@ -344,13 +338,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   child: ListTile(
                                                     leading: Icon(Icons.comment),
                                                     title: Text('Leave a Memory'),
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'download',
-                                                  child: ListTile(
-                                                    leading: Icon(Icons.download),
-                                                    title: Text('Download'),
                                                   ),
                                                 ),
                                               ],
