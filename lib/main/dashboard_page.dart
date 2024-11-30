@@ -29,42 +29,63 @@ class _DashboardPageState extends State<DashboardPage> {
     {'label': '기타', 'icon': Icons.category},
   ];
 
-  final List<int> _selectedMembers = []; // 선택된 멤버 ID
-  final List<String> _selectedTags = []; // 선택된 태그
+  int? _selectedMember; // 선택된 멤버 ID
+  String? _selectedTag; // 선택된 태그
+
+  int _currentPage = 0; //scroll
+  int _totalPages = 1;
+  final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = true;
   bool _isLoadingMembers = true;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
     _loadPhotos();
     _loadMembers();
+    _scrollController.addListener(() {
+      if (_scrollController.position.extentAfter < 300 && !_isLoadingMore && _currentPage + 1 < _totalPages) {
+        _loadMorePhotos();
+      }
+    });
   }
-
-  Future<void> _loadPhotos([String? tagFilter]) async {
+  Future<void> _loadPhotos([String? tagFilter, int page = 0]) async {
     setState(() => _isLoading = true);
 
     try {
-      _photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: tagFilter);
-      //데이터 검증, null 처리
-      _photos = _photos.map((photo) {
-        return {
-          'fileName': photo['fileName'] ?? 'Unknown',
-          'fileUrl': photo['fileUrl'] ?? '',
-          'imageSize': photo['imageSize'],
-          'uploadDate': photo['uploadDate'] is String
-              ? DateTime.parse(photo['uploadDate'])
-              : photo['uploadDate'], // DateTime 타입인 경우 그대로 사용
-        };
-      }).toList();
+      final photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: tagFilter, page: page);
+      setState(() {
+        _photos = photos['content'];
+        _totalPages = photos['totalPages'];
+        _currentPage = page;
+      });
     } catch (e) {
-      if(!mounted)return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading photos: $e')),
-      );
+      //print('Error loading photos: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMorePhotos() async {
+    if (_currentPage + 1 >= _totalPages) return;
+
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextPage = _currentPage + 1;
+      final photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: _selectedTag, page: nextPage);
+      setState(() {
+        _photos.addAll(photos['content']);
+        _currentPage = nextPage;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading more photos: $e')),
+      );
+    } finally {
+      setState(() => _isLoadingMore = false);
     }
   }
 
@@ -81,10 +102,7 @@ class _DashboardPageState extends State<DashboardPage> {
       setState(() {
         _isLoadingMembers = false;
       });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading group members: $e')),
-      );
+      //print('Error loading group members: $e');
     }
   }
   void _leaveMemory(Map<String, dynamic> photo) {
@@ -254,92 +272,106 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 6),
                   // 날짜 구분
-                  ...groupedPhotos.keys.map((date) {
-                    final photos = groupedPhotos[date]!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(date, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 4,
-                            mainAxisSpacing: 4,
-                          ),
-                          itemCount: photos.length,
-                          itemBuilder: (context, index) {
-                            final photo = photos[index];
-                            return GestureDetector(
-                              onTap: () {
-                                // 사진 클릭 로직
-                                _showPhotoDialog(context, photos, index);
-                              },
-                              child: Stack(
-                                children: [
-                                  Image.network('${photo['fileUrl']}',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
-                                  },
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: groupedPhotos.keys.length + (_isLoadingMore ? 1 : 0),
+                          itemBuilder: (context, dateIndex) {
+                            if (dateIndex == groupedPhotos.keys.length) {
+                              // 로딩 인디케이터 추가
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            final date = groupedPhotos.keys.elementAt(dateIndex);
+                            final photos = groupedPhotos[date]!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                  child: Text(
+                                    date,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 4,
+                                    mainAxisSpacing: 4,
+                                  ),
+                                  itemCount: photos.length,
+                                  itemBuilder: (context, index) {
+                                    final photo = photos[index];
+                                    return GestureDetector(
+                                      onTap: () {
+                                        // 사진 클릭 로직
+                                        _showPhotoDialog(context, photos, index);
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Image.network(
+                                            '${photo['fileUrl']}',
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                                            },
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return const Center(
+                                                child: CircularProgressIndicator(),
+                                              );
+                                            },
+                                          ),
+                                          Positioned(
+                                            top: 8,
+                                            right: 8,
+                                            child: PopupMenuButton<String>(
+                                              onSelected: (value) {
+                                                if (value == 'memory') {
+                                                  _leaveMemory(photo); // 메모 남기기 로직
+                                                } else if (value == 'download') {
+                                                  _downloadPhoto(photo); // 사진 다운로드 로직
+                                                }
+                                              },
+                                              icon: const Icon(Icons.more_vert, color: Colors.white),
+                                              itemBuilder: (BuildContext context) => [
+                                                const PopupMenuItem(
+                                                  value: 'memory',
+                                                  child: ListTile(
+                                                    leading: Icon(Icons.comment),
+                                                    title: Text('Leave a Memory'),
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'download',
+                                                  child: ListTile(
+                                                    leading: Icon(Icons.download),
+                                                    title: Text('Download'),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
-                                  ),
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        if (value == 'memory') {
-                                          _leaveMemory(photo); // 메모 남기기 로직
-                                        } else if (value == 'download') {
-                                          _downloadPhoto(photo); // 사진 다운로드 로직
-                                        }
-                                      },
-                                      icon: const Icon(Icons.more_vert, color: Colors.white),
-                                      itemBuilder: (BuildContext context) => [
-                                        const PopupMenuItem(
-                                          value: 'memory',
-                                          child: ListTile(
-                                            leading: Icon(Icons.comment),
-                                            title: Text('Leave a Memory'),
-                                          ),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'download',
-                                          child: ListTile(
-                                            leading: Icon(Icons.download),
-                                            title: Text('Download'),
-                                          ),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'delete',
-                                          child: ListTile(
-                                            leading: Icon(Icons.delete, color: Colors.red),
-                                            title: Text('Delete'),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ]
-                              ),
+                                ),
+                              ],
                             );
                           },
                         ),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  }),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
+      // 사진 피드로
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // 버튼 클릭 시 동작 추가
@@ -357,7 +389,7 @@ class _DashboardPageState extends State<DashboardPage> {
   // 멤버 버튼 리스트 생성
   List<Widget> _buildMemberButtons() {
     return _members.map((member) {
-      final isSelected = _selectedMembers.contains(member['id']);
+      final isSelected = _selectedMember == member['id'];
       final profilePicture = member['profilePicturePath']; // 기본 이미지 설정
       return Padding(
         padding: const EdgeInsets.only(right: 8.0),
@@ -365,9 +397,12 @@ class _DashboardPageState extends State<DashboardPage> {
           onPressed: () {
             setState(() {
               if (isSelected) {
-                _selectedMembers.remove(member['id']);
+                _selectedMember = null; // 해제
+                _loadPhotos(); // 기본 API 호출
               } else {
-                _selectedMembers.add(member['id']);
+                _selectedMember = member['id']; // 선택
+                _selectedTag = null; // 태그 선택 해제
+                _loadPhotos(member['id'].toString());
               }
             });
             _loadPhotos(member['id'].toString());
@@ -402,7 +437,7 @@ class _DashboardPageState extends State<DashboardPage> {
   // 태그 버튼 리스트 생성
   List<Widget> _buildTagButtons() {
     return _tags.map((tag) {
-      final isSelected = _selectedTags.contains(tag['label']);
+      final isSelected =  _selectedTag == tag['label'];
       final tagFilter = _mapTagToFilter(tag['label']);
       return Padding(
         padding: const EdgeInsets.only(right: 8.0),
@@ -410,9 +445,12 @@ class _DashboardPageState extends State<DashboardPage> {
           onPressed: () {
             setState(() {
               if (isSelected) {
-                _selectedTags.remove(tag['label']);
+                _selectedTag = null; // 해제
+                _loadPhotos(); // 기본 API 호출
               } else {
-                _selectedTags.add(tag['label']);
+                _selectedTag = tag['label']; // 선택
+                _selectedMember = null; // 멤버 선택 해제
+                _loadPhotos(tagFilter);
               }
             });
             _loadPhotos(tagFilter);
@@ -442,6 +480,8 @@ class _DashboardPageState extends State<DashboardPage> {
       );
     }).toList();
   }
+
+//서버에서 가져오는 사진 데이터
   Map<String, List<Map<String, dynamic>>> _groupPhotosByDate() {
     final Map<String, List<Map<String, dynamic>>> groupedPhotos = {};
     for (var photo in _photos) {
@@ -455,54 +495,58 @@ class _DashboardPageState extends State<DashboardPage> {
     }
     return groupedPhotos;
   }
-}
-void _showPhotoDialog(BuildContext context, List<Map<String, dynamic>> photos, int initialIndex) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(0),
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: PageController(initialPage: initialIndex),
-              itemCount: photos.length,
-              itemBuilder: (context, index) {
-                final photo = photos[index];
-                return InteractiveViewer(
-                  child: Image.network(
-                    '${photo['fileUrl']}',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, size: 100, color: Colors.grey);
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-            Positioned(
-              top: 40,
-              right: 16,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                onPressed: () {
-                  Navigator.of(context).pop();
+  //사진 탭해서 크게 보기
+  void _showPhotoDialog(BuildContext context, List<Map<String, dynamic>> photos, int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: const EdgeInsets.all(0),
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: PageController(initialPage: initialIndex),
+                itemCount: photos.length,
+                itemBuilder: (context, index) {
+                  final photo = photos[index];
+                  return InteractiveViewer(
+                    child: Image.network(
+                      '${photo['fileUrl']}',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.broken_image, size: 100, color: Colors.grey);
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      },
+                    ),
+                  );
                 },
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
+              Positioned(
+                top: 40,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 }
+
+//태그 필터 서버로 넘길 단어
 String _mapTagToFilter(String tag) {
   switch (tag) {
     case '풍경':

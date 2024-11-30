@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
 import '../welcome/user_provider.dart';
+import '../welcome/fetch_user.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,6 +16,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   File? _newProfileImage; // 새로 선택된 프로필 이미지
   final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
 
   Future<void> _pickNewProfileImage(BuildContext context) async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -30,7 +33,47 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
+  Future<void> _uploadProfileImage(BuildContext context) async {
+    if (_newProfileImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이미지를 선택해주세요.')),
+      );
+      return;
+    }
 
+    setState(() {
+      _isUploading = true;
+    });
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final int? userId = userProvider.userData?['userId'];
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('사용자 정보를 찾을 수 없습니다.')),
+      );
+      setState(() {
+        _isUploading = false;
+      });
+      return;
+    }
+
+    final success = await updateUserProfile(userId, _newProfileImage!);
+
+    setState(() {
+      _isUploading = false;
+    });
+
+    if (success) {
+      userProvider.updateUserData({'profilePicture': _newProfileImage!.path});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('프로필 사진이 업데이트되었습니다.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('프로필 사진 업로드에 실패했습니다.')),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -103,10 +146,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  /*ElevatedButton(
-                    onPressed: () {
-                      // 프로필 저장
-                    },
+                  _isUploading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                    onPressed: () => _uploadProfileImage(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -122,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: Colors.black,
                       ),
                     ),
-                  ),*/
+                  ),
                 ],
               ),
             ),

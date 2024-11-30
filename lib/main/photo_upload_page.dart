@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:exif/exif.dart';
 
-const String serverUrl = 'https://c610-58-236-125-163.ngrok-free.app';
+const String serverUrl = ''; //서버 킬 때마다 최신화
 
 class PhotoUploadPage extends StatefulWidget {
   final int groupId;

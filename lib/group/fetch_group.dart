@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String serverUrl = 'https://c610-58-236-125-163.ngrok-free.app'; // 서버 URL
+const String serverUrl = ''; // 서버 킬 때마다 최신화
 
 /// 그룹 생성 요청 함수
 Future<Map<String, dynamic>> createGroup(String groupName, int creatorId) async {

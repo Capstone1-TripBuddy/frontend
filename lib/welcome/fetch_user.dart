@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 
-const String serverUrl = 'https://c610-58-236-125-163.ngrok-free.app'; // 서버 URL
+const String serverUrl = ''; // 서버 킬 때마다 최신화
 /// 회원가입 요청 함수
 Future<String> signUpUser(String name, String email, String password, File? profileImage) async {
   try {
@@ -66,5 +67,33 @@ Future<Map<String, dynamic>> loginUser(
     }
   } catch (e) {
     throw Exception('로그인 요청 중 오류가 발생했습니다: $e');
+  }
+}
+
+
+///프로필 사진 변경
+Future<bool> updateUserProfile(int userId, File profilePicture) async {
+  final url = Uri.parse('$serverUrl/api/users/profile');
+
+  try {
+    final request = http.MultipartRequest('POST', url)
+      ..fields['userId'] = userId.toString()
+      ..files.add(await http.MultipartFile.fromPath(
+        'profilePicture',
+        profilePicture.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
+
+    final response = await request.send();
+
+    if (response.statusCode == 202) {
+      return true; // 프로필 수정 성공
+    } else {
+      print('Error: ${response.statusCode}');
+      return false; // 요청 실패
+    }
+  } catch (e) {
+    print('Error updating profile: $e');
+    return false;
   }
 }
