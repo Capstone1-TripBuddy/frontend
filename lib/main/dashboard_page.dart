@@ -125,12 +125,6 @@ class _DashboardPageState extends State<DashboardPage> {
       );
     }
   }
-
-  void _leaveMemory(Map<String, dynamic> photo) {
-    // 메모 추가 기능 구현
-    print('Leave a memory for: ${photo['fileName']}');
-  }
-
   @override
   Widget build(BuildContext context) {
     final groupProvider = Provider.of<GroupProvider>(context);
@@ -171,7 +165,7 @@ class _DashboardPageState extends State<DashboardPage> {
               // 알림 기능 로직
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationPage()),
+                MaterialPageRoute(builder: (context) => NotificationPage(groupId: widget.groupId, userId: widget.userId,)),
               );
             },
           ),

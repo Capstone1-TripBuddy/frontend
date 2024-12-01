@@ -103,6 +103,7 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
   }
 }
 
+///집 파일 압축 해제
 Future<void> _extractZipFile(String zipFilePath, String extractPath) async {
   try {
     final File zipFile = File(zipFilePath);
@@ -129,6 +130,7 @@ Future<void> _extractZipFile(String zipFilePath, String extractPath) async {
   }
 }
 
+/// 저장 장소 선정
 Future<Directory?> _getDCIMDirectory() async {
   try {
     final Directory? externalStorage = await getExternalStorageDirectory();
@@ -147,6 +149,7 @@ Future<Directory?> _getDCIMDirectory() async {
   }
 }
 
+///좋아요, 댓글 불러오기
 Future<Map<String, dynamic>> fetchPhotoActivity({required int photoId}) async {
   final url = Uri.parse('$serverUrl/api/activity/photo/$photoId');
 
@@ -159,6 +162,7 @@ Future<Map<String, dynamic>> fetchPhotoActivity({required int photoId}) async {
   }
 }
 
+///좋아요 저장
 Future<int?> addBookmark({required int groupId, required int userId, required int photoId,}) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark');
   final body = json.encode({
@@ -182,6 +186,8 @@ Future<int?> addBookmark({required int groupId, required int userId, required in
     throw Exception("Failed to add bookmark: ${response.body}");
   }
 }
+
+///좋아요 삭제
 Future<void> deleteBookmark({required int bookmarkId}) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark/$bookmarkId');
 
@@ -192,12 +198,8 @@ Future<void> deleteBookmark({required int bookmarkId}) async {
   }
 }
 
-Future<int> savePhotoMemory({
-  required int groupId,
-  required int userId,
-  required int photoId,
-  required String content,
-}) async {
+///댓글 저장
+Future<int> savePhotoMemory({required int groupId, required int userId, required int photoId, required String content,}) async {
   final url = Uri.parse('$serverUrl/api/activity/reply');
   final response = await http.post(
     url,
@@ -218,6 +220,7 @@ Future<int> savePhotoMemory({
   }
 }
 
+///댓글 삭제
 Future<void> deletePhotoMemory({required int replyId}) async {
   final url = Uri.parse('$serverUrl/api/activity/reply/$replyId');
 
@@ -227,3 +230,17 @@ Future<void> deletePhotoMemory({required int replyId}) async {
     throw Exception('댓글 삭제 실패: ${response.statusCode}');
   }
 }
+
+Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, required int userId}) async {
+  final url = Uri.parse('$serverUrl/api/activity/group/$groupId/user/$userId');
+
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((item) => item as Map<String, dynamic>).toList();
+  } else {
+    throw Exception('Failed to load group activity: ${response.statusCode}');
+  }
+}
+
