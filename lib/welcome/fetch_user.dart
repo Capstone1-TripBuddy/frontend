@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
+import '/constants.dart';
 
-const String serverUrl = ''; // 서버 킬 때마다 최신화
 /// 회원가입 요청 함수
 Future<String> signUpUser(String name, String email, String password, File? profileImage) async {
   try {

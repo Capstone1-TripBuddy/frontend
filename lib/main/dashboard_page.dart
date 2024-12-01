@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trip_buddy/main/notification_page.dart';
-import 'package:trip_buddy/main/profile_page.dart';
+import 'package:trip_buddy/main/leave_memory_page.dart';
 
 import '../welcome/user_provider.dart';
 import '../group/group_provider.dart';
 
+import 'notification_page.dart';
+import 'profile_page.dart';
 import 'photo_upload_page.dart';
 import 'photo_feed_page.dart';
 import 'fetch_main.dart';
@@ -51,6 +52,7 @@ class _DashboardPageState extends State<DashboardPage> {
       }
     });
   }
+
   Future<void> _loadPhotos([String? tagFilter, int page = 0]) async {
     setState(() => _isLoading = true);
 
@@ -105,10 +107,30 @@ class _DashboardPageState extends State<DashboardPage> {
       //print('Error loading group members: $e');
     }
   }
+
+  void _downloadAndUnzipAlbum() async {
+    final String albumName = _selectedTag ?? _selectedMember.toString();
+    try {
+      await downloadAlbumAndExtract(
+        groupId: widget.groupId,
+        albumName: albumName,
+      );
+      if(!mounted)return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('앨범 다운로드 및 압축 해제 완료')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('다운로드 중 오류 발생: $e')),
+      );
+    }
+  }
+
   void _leaveMemory(Map<String, dynamic> photo) {
     // 메모 추가 기능 구현
     print('Leave a memory for: ${photo['fileName']}');
   }
+
   @override
   Widget build(BuildContext context) {
     final groupProvider = Provider.of<GroupProvider>(context);
@@ -139,6 +161,10 @@ class _DashboardPageState extends State<DashboardPage> {
           }
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.download, color: Colors.black),
+            onPressed: _downloadAndUnzipAlbum,
+          ),
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.black),
             onPressed: () {
@@ -328,7 +354,19 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: PopupMenuButton<String>(
                                               onSelected: (value) {
                                                 if (value == 'memory') {
-                                                  _leaveMemory(photo); // 메모 남기기 로직
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => LeaveMemoryPage(
+                                                        photo: {
+                                                          'photoId': photo['photoId'], // photoId 전달
+                                                          'fileUrl': photo['fileUrl'], // fileUrl 전달
+                                                        },
+                                                        groupId: widget.groupId, // 전달할 groupId
+                                                        userId: widget.userId,  // 전달할 userId
+                                                      ),
+                                                    ),
+                                                  );// 메모 남기기 로직
                                                 }
                                               },
                                               icon: const Icon(Icons.more_vert, color: Colors.white),

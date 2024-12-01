@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:exif/exif.dart';
-
-const String serverUrl = ''; //서버 킬 때마다 최신화
+import '/constants.dart';
 
 class PhotoUploadPage extends StatefulWidget {
   final int groupId;
