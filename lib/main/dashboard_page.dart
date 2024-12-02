@@ -28,10 +28,10 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Map<String, dynamic>> _photos = [];
   List<Map<String, dynamic>> _members = [];
   final List<Map<String, dynamic>> _tags = [
-    {'label': '풍경', 'icon': Icons.landscape},
+    {'label': '도시', 'icon': Icons.location_city},
+    {'label': '자연', 'icon': Icons.nature_people},
     {'label': '음식', 'icon': Icons.restaurant},
     {'label': '동물', 'icon': Icons.pets},
-    {'label': '기타', 'icon': Icons.category},
   ];
 
   int? _selectedMember; // 선택된 멤버 ID
@@ -588,13 +588,15 @@ class _DashboardPageState extends State<DashboardPage> {
 //태그 필터 서버로 넘길 단어
 String _mapTagToFilter(String tag) {
   switch (tag) {
-    case '풍경':
-      return 'sight';
+    case '도시':
+      return 'town';
+    case '자연':
+      return 'nature';
     case '음식':
       return 'food';
     case '동물':
       return 'animal';
     default:
-      return 'other';
+      return '';
   }
 }
