@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../notification/notification_overlay.dart';
 import 'fetch_main.dart';
 
 /// 좋아요 및 질문 3가지
@@ -14,24 +16,35 @@ class LeaveMemoryPage extends StatefulWidget {
 }
 
 class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
+  late final NotificationService _notificationService;
+
   bool _isLiked = false;
   bool _isLoading = false; // 좋아요 버튼 로딩 상태
   bool _isSavingMemory = false;
   bool _isFetchingActivity = true;
+  bool _isFetchingQuestions = true; // 질문 로딩 상태
 
   int? _bookmarkId;
   int? _replyId;
   String _responses = ''; // Store responses
-  final List<String> _questions = [
-    "이 날 가장 기억에 남는 순간은 무엇인가요?",
-    "이 사진을 찍을 당시 누구와 함께 있었나요?",
-    "이 사진은 어떤 감정을 떠올리게 하나요?",
-  ];
+  List<String> _questions = [];
 
   @override
   void initState() {
     super.initState();
     _loadPhotoActivity();
+    _fetchQuestions();
+    _notificationService = NotificationService();
+
+    // 알림 스트림 구독
+    _notificationService.notificationStream.listen((message) {
+      NotificationOverlayManager().show(context, message);
+    });
+
+    // 주기적으로 서버에서 알림 확인
+    Timer.periodic(const Duration(seconds: 15), (_) {
+      _notificationService.fetchNotifications(widget.groupId, widget.userId);
+    });
   }
 
   Future<void> _loadPhotoActivity() async {
@@ -49,20 +62,14 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
         );
         if (userBookmark != null) {
           _isLiked = true;
-          _bookmarkId = userBookmark['id'];
+          _bookmarkId = userBookmark['bookmarkId'];
         }
-
         // 댓글 데이터 초기화
         final replies = activity['photoReplies'] as List<dynamic>;
         if (replies.isNotEmpty) {
-          _replyId = replies.first['id'];
+          _replyId = replies.first['replyId'];
           _responses = replies.first['replyText'];
         }
-
-        // 질문 데이터 초기화
-        final questions = activity['photoQuestions'] as List<dynamic>;
-        _questions.clear();
-        _questions.addAll(questions.map((q) => q.toString()));
       });
     } catch (e) {
       if(!mounted)return;
@@ -74,6 +81,24 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
     }
   }
 
+  Future<void> _fetchQuestions() async {
+    setState(() => _isFetchingQuestions = true);
+
+    try {
+      final questions = await fetchPhotoQuestions(photoId: widget.photo['photoId']);
+
+      setState(() {
+        _questions = questions.map<String>((q) => q['content'].toString()).toList();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('질문을 가져오지 못했습니다: $e')),
+      );
+    } finally {
+      setState(() => _isFetchingQuestions = false);
+    }
+  }
   Future<void> _toggleLike() async {
     setState(() => _isLoading = true);
 
@@ -169,7 +194,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Leave a Memory"),
+        title: const Text("나의 추억"),
         actions: [
           IconButton(
             icon: _isLoading
@@ -209,11 +234,31 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
               ),
             ),
             const SizedBox(height: 16),
+            // 질문 섹션
+            if (_isFetchingQuestions)
+              const Text(
+                "질문 생성 중...",
+                style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              )
+            else if (_questions.isNotEmpty)
+              for (var i = 0; i < _questions.length; i++) ...[
+                Text(
+                  "질문 ${i + 1}: ${_questions[i]}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+              ]
+            else
+              const Text(
+                "질문이 없습니다.",
+                style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              ),
+
             TextField(
               controller: TextEditingController(text: _responses),
               onChanged: (value) => _responses = value,
               decoration: const InputDecoration(
-                hintText: "이 사진과의 추억이 있을까요?",
+                hintText: "이 사진과의 추억을 남겨보세요!",
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,

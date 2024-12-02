@@ -53,6 +53,7 @@ Future<Map<String, dynamic>> joinGroup(int userId, String inviteCode) async {
   }
 }
 
+
 Future<List<Map<String, dynamic>>> fetchUserGroups(int userId) async {
   final String url = '$serverUrl/api/groups/$userId';
 

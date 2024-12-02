@@ -5,8 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import '/constants.dart';
 
+/// 그룹 내 사진 조회
 Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilter, int page = 0}) async {
-  const String root = 'https://photo-bucket-012.s3.ap-northeast-2.amazonaws.com/';
   const String baseUrl = '$serverUrl/api/albums';
   final String url = tagFilter != null ? '$baseUrl/$groupId/$tagFilter/$page' : '$baseUrl/$groupId/$page';
 
@@ -43,6 +43,7 @@ Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilte
   }
 }
 
+/// 여행 그룹의 멤버들 정보 조회
 Future<List<Map<String, dynamic>>> fetchGroupMembers(int groupId) async {
   final String url = '$serverUrl/api/groups/members/$groupId';
   try {
@@ -231,6 +232,7 @@ Future<void> deletePhotoMemory({required int replyId}) async {
   }
 }
 
+///그룹 내 좋아요, 댓글 조회
 Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, required int userId}) async {
   final url = Uri.parse('$serverUrl/api/activity/group/$groupId/user/$userId');
 
@@ -244,3 +246,48 @@ Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, req
   }
 }
 
+///AI 질문
+Future<List<Map<String, dynamic>>> fetchPhotoQuestions({required int photoId}) async {
+  final url = Uri.parse('$serverUrl/api/activity/question/$photoId');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map<Map<String, dynamic>>((q) => {
+        'content': q['content'],
+        'createdAt': q['createdAt'],
+      }).toList();
+    } else {
+      throw Exception('Failed to fetch photo questions. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching photo questions: $e');
+  }
+}
+
+///사진 피드 조회
+Future<List<Map<String, dynamic>>> fetchPhotoActivities({required int groupId}) async {
+  final url = Uri.parse('$serverUrl/api/activity/photo/$groupId');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map<Map<String, dynamic>>((activity) => {
+        'photoId': activity['photoId'],
+        'totalBookmarks': activity['totalBookmarks'],
+        'totalReplies': activity['totalReplies'],
+        'photoBookmarks': activity['photoBookmarks'],
+        'photoReplies': activity['photoReplies'],
+        'photoQuestions': activity['photoQuestions'],
+      }).toList();
+    } else {
+      throw Exception('Failed to fetch photo activities. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching photo activities: $e');
+  }
+}

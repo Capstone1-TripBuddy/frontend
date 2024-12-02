@@ -1,38 +1,104 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../notification/notification_overlay.dart';
+import 'fetch_main.dart';
 
-/// 여기
+/// 사진 피드 페이지
 class PhotoFeedPage extends StatefulWidget {
-  const PhotoFeedPage({super.key});
+  final int groupId;
+  final int userId;
+  const PhotoFeedPage({super.key, required this.groupId, required this.userId});
 
   @override
   State<PhotoFeedPage> createState() => _PhotoFeedPageState();
 }
 
 class _PhotoFeedPageState extends State<PhotoFeedPage> {
-  final List<Map<String, dynamic>> _photoFeed = [
-    {
-      'userName': 'Sarah',
-      'userAvatar': 'assets/images/background2.jpg',
-      'timeAgo': '2 hours ago',
-      'imageUrl': 'assets/images/background.jpg',
-      'description':
-      'Watching the sunset over the mountains while enjoying local wine. The colors were absolutely breathtaking!',
-      'likes': 12,
-      'comments': ['Beautiful!', 'Amazing shot!', 'Looks peaceful!'],
-      'isCommentsVisible': false,
-    },
-    {
-      'userName': 'Michael',
-      'userAvatar': 'assets/images/background2.jpg',
-      'timeAgo': '5 hours ago',
-      'imageUrl': 'assets/images/background.jpg',
-      'description':
-      'A misty forest that feels like another world. So serene and peaceful!',
-      'likes': 8,
-      'comments': ['So calming!', 'I want to go there too!'],
-      'isCommentsVisible': false,
-    },
-  ];
+  late final NotificationService _notificationService;
+
+  List<Map<String, dynamic>> _photoFeed = [];
+  List<Map<String, dynamic>> _groupMembers = [];
+  bool _isLoading = true;
+
+  @override
+  void initState(){
+    super.initState();
+    _loadPhotoActivities();
+    _loadGroupMembers();
+    _notificationService = NotificationService();
+    // 알림 스트림 구독
+    _notificationService.notificationStream.listen((message) {
+      NotificationOverlayManager().show(context, message);
+    });
+
+    // 주기적으로 서버에서 알림 확인
+    Timer.periodic(const Duration(seconds: 15), (_) {
+      _notificationService.fetchNotifications(widget.groupId, widget.userId);
+    });
+  }
+
+  Future<void> _loadPhotoActivities() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final activities = await fetchPhotoActivities(groupId: widget.groupId);
+      setState(() {
+        _photoFeed = activities.map((activity) {
+          final replies = activity['photoReplies'] as List<dynamic>;
+          final comments = replies.map((reply) {
+            return {
+              'userId': reply['userId'],
+              'content': reply['content'],
+            };
+          }).toList();
+
+          return {
+            'photoId': activity['photoId'],
+            'likes': activity['totalBookmarks'],
+            'comments': comments,
+            'totalReplies': activity['totalReplies'],
+            'imageUrl': 'assets/images/background.jpg', // 수정 필요
+            'isCommentsVisible': false,
+          };
+        }).toList();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사진 활동 데이터를 불러오지 못했습니다: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadGroupMembers() async {
+    try {
+      final members = await fetchGroupMembers(widget.groupId);
+      setState(() {
+        _groupMembers = members;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('그룹 멤버 데이터를 불러오지 못했습니다: $e')),
+      );
+    }
+  }
+
+  Map<String, String> _getMemberInfo(dynamic userId) {
+    final member = _groupMembers.firstWhere(
+          (member) => member['id'] == int.tryParse(userId.toString()),
+    );
+    if (member != null) {
+      return {
+        'name': member['name'] ?? 'Unknown',
+        'profilePicturePath': member['profilePicturePath'] ?? '',
+      };
+    }
+    return {'name': 'Unknown', 'profilePicturePath': ''};
+  }
+
   void _toggleCommentsVisibility(int index) {
     setState(() {
       _photoFeed[index]['isCommentsVisible'] =
@@ -48,7 +114,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
         backgroundColor: Colors.white,
         elevation: 1,
         title: const Text(
-          'Photo Feed',
+          '사진 피드',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
@@ -58,38 +124,34 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
           },
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount:  _photoFeed.length, // 예시 데이터 개수
-        itemBuilder: (context, index) {
-          final feed = _photoFeed[index];
-          return _buildPhotoFeedItem(
-            context,
-            index,
-            feed['userName'],
-            feed['userAvatar'],
-            feed['timeAgo'],
-            feed['imageUrl'],
-            feed['description'],
-            feed['likes'],
-            feed['comments'],
-            feed['isCommentsVisible'],
-          );
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount:  _photoFeed.length, // 예시 데이터 개수
+              itemBuilder: (context, index) {
+                final feed = _photoFeed[index];
+                return _buildPhotoFeedItem(
+                  context,
+                  index,
+                  feed['imageUrl'],
+                  feed['likes'],
+                  feed['totalReplies'],
+                  feed['comments'],
+                  feed['isCommentsVisible'],
+                );
+              },
+            ),
     );
   }
 
   Widget _buildPhotoFeedItem(
       BuildContext context,
       int index,
-      String userName,
-      String userAvatar,
-      String timeAgo,
       String imageUrl,
-      String description,
       int likes,
-      List<String> comments,
+      int totalReplies,
+      List<dynamic> comments,
       bool isCommentsVisible,) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -101,35 +163,6 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 사용자 정보
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: AssetImage(userAvatar),
-                  radius: 24,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      timeAgo,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
             const SizedBox(height: 12),
             // 이미지
             ClipRRect(
@@ -141,20 +174,6 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 12),
-            // 설명
-            if (description.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  description,
-                  style: const TextStyle(fontSize: 14, color: Colors.black87),
-                ),
-              ),
             const SizedBox(height: 12),
             // 좋아요와 댓글
             Row(
@@ -171,9 +190,19 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.comment, color: Colors.blue),
-                  onPressed: () => _toggleCommentsVisibility(index),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.comment, color: Colors.blue),
+                      onPressed: () => _toggleCommentsVisibility(index),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$totalReplies',
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -183,20 +212,41 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: comments
-                      .map(
-                        (comment) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Text(
-                        comment,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
+                  children: comments.map((comment) {
+                    final memberInfo = _getMemberInfo(comment['userId']);
+                    return Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundImage: memberInfo['profilePicturePath']!
+                              .isNotEmpty
+                              ? NetworkImage(memberInfo['profilePicturePath']!)
+                              : const AssetImage(
+                              'assets/images/profilebase.PNG')
+                          as ImageProvider,
                         ),
-                      ),
-                    ),
-                  )
-                      .toList(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                memberInfo['name']!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                comment['content'],
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
                 ),
               ),
           ],

@@ -42,6 +42,7 @@ class _NotificationPageState extends State<NotificationPage> {
         }).toList();
       });
     } catch (e) {
+      if(!mounted)return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('알림을 불러오지 못했습니다: $e')),
       );
@@ -52,11 +53,13 @@ class _NotificationPageState extends State<NotificationPage> {
   String _mapActivityTypeToText(String activityType) {
     switch (activityType) {
       case 'share':
-        return '추억을 공유했습니다';
+        return '추억을 공유했어요!';
       case 'bookmark':
-        return '사진에 북마크를 추가했습니다';
+        return '사진에 좋아요를 추가했어요!';
+      case 'comment':
+        return '사진에 댓글을 추가했어요!';
       default:
-        return '활동을 했습니다';
+        return '활동을 했어요!';
     }
   }
 
@@ -66,6 +69,8 @@ class _NotificationPageState extends State<NotificationPage> {
         return Icons.chat_bubble;
       case 'bookmark':
         return Icons.bookmark;
+      case 'comment':
+        return Icons.comment;
       default:
         return Icons.notifications;
     }
@@ -77,6 +82,8 @@ class _NotificationPageState extends State<NotificationPage> {
         return Colors.green;
       case 'bookmark':
         return Colors.blue;
+      case 'comment':
+        return Colors.pinkAccent;
       default:
         return Colors.grey;
     }
@@ -117,37 +124,37 @@ class _NotificationPageState extends State<NotificationPage> {
           ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty
           ? const Center(
-        child: Text(
-          '최근 활동이 없습니다.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      )
+              child: Text(
+                '최근 활동이 없습니다.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
           : ListView.separated(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: _notifications.length,
-        itemBuilder: (context, index) {
-          final notification = _notifications[index];
-          return ListTile(
-            leading: CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.grey[300],
-              child: Icon(notification['icon'], color: notification['iconColor']),
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _notifications.length,
+              itemBuilder: (context, index) {
+                final notification = _notifications[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    child: Icon(notification['icon'], color: notification['iconColor']),
+                  ),
+                  title: Text(
+                    '${notification['name']} ${notification['action']}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    notification['time'],
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                );
+              },
+              separatorBuilder: (context, index) => const Divider(
+                thickness: 0.5,
+                color: Colors.grey,
+              ),
             ),
-            title: Text(
-              '${notification['name']} ${notification['action']}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              notification['time'],
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          );
-        },
-        separatorBuilder: (context, index) => const Divider(
-          thickness: 0.5,
-          color: Colors.grey,
-        ),
-      ),
     );
   }
 }
