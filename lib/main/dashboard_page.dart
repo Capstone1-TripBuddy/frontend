@@ -49,6 +49,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadPhotos();
+    _loadMorePhotos();
     _loadMembers();
     _scrollController.addListener(() {
       if (_scrollController.position.extentAfter < 300 && !_isLoadingMore && _currentPage + 1 < _totalPages) {
@@ -63,21 +64,24 @@ class _DashboardPageState extends State<DashboardPage> {
     });
 
     // 주기적으로 서버에서 알림 확인
-    Timer.periodic(const Duration(seconds: 15), (_) {
+    Timer.periodic(const Duration(seconds: 60), (_) {
       _notificationService.fetchNotifications(widget.groupId, widget.userId);
     });
   }
 
   Future<void> _loadPhotos([String? tagFilter, int page = 0]) async {
     setState(() => _isLoading = true);
-
+    print(1);
     try {
       final photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: tagFilter, page: page);
+      print(2);
       setState(() {
         _photos = photos['content'];
         _totalPages = photos['totalPages'];
         _currentPage = page;
       });
+      print(3);
+      print(photos);
     } catch (e) {
       //print('Error loading photos: $e');
     } finally {
@@ -149,6 +153,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final userName = userProvider.userData?['name'] ?? 'Guest'; // 기본값 설정
     final userEmail = userProvider.userData?['email'] ?? 'guest@example.com';
     final userProfile = userProvider.userData?['profilePicture'];
+
     final groupedPhotos = _groupPhotosByDate();
     return Scaffold(
       appBar: AppBar(
@@ -272,13 +277,18 @@ class _DashboardPageState extends State<DashboardPage> {
         child: _isLoading || _isLoadingMembers
             ? const Center(child: CircularProgressIndicator())
             : _photos.isEmpty
-            ? const Center(
-                child: Text(
-                  '사진이 없습니다.\n사진을 업로드 해보세요!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+            ? RefreshIndicator(
+          onRefresh: () async {
+            await _loadPhotos();
+          },
+              child: const Center(
+                  child: Text(
+                    '사진이 없습니다.\n사진을 업로드 해보세요!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
                 ),
-              )
+            )
             : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(

@@ -54,6 +54,7 @@ Future<Map<String, dynamic>> loginUser(
 
     if (response.statusCode == 200) {
       final userData = jsonDecode(response.body);
+      userData['profilePicture'] = root + userData['profilePicture']; //userProvider에 저장할때 root 추가
       onUserLoggedIn(userData); // Provider에 데이터 전달
       return userData;
     } else if (response.statusCode == 400) {

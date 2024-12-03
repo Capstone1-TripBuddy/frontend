@@ -32,7 +32,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
     });
 
     // 주기적으로 서버에서 알림 확인
-    Timer.periodic(const Duration(seconds: 15), (_) {
+    Timer.periodic(const Duration(seconds: 60), (_) {
       _notificationService.fetchNotifications(widget.groupId, widget.userId);
     });
   }

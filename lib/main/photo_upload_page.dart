@@ -188,7 +188,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                             Icon(Icons.cloud_upload, size: 48, color: Colors.grey),
                             SizedBox(height: 8),
                             Text(
-                              '파일을 드래그하거나 클릭하여 업로드하세요',
+                              '파일을 클릭하여 업로드하세요',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
@@ -196,14 +196,6 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 4),
-                            Text(
-                              '최대 20MB까지 업로드 가능합니다',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
                           ],
                         ),
                       ),

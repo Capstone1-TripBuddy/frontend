@@ -53,7 +53,7 @@ Future<Map<String, dynamic>> joinGroup(int userId, String inviteCode) async {
   }
 }
 
-
+///사용자의 참여한 전체 그룹 조회 with group_list페이지
 Future<List<Map<String, dynamic>>> fetchUserGroups(int userId) async {
   final String url = '$serverUrl/api/groups/$userId';
 

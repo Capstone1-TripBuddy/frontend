@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'fetch_user.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import '/constants.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -35,17 +36,13 @@ class _SignUpPageState extends State<SignUpPage> {
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('모든 필드를 채워주세요.')),
-      );
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty || _profileImage == null) {
+      showCustomSnackBar(context, '모든 필드를 채워주세요.');
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('비밀번호가 일치하지 않습니다.')),
-      );
+      showCustomSnackBar(context, '비밀번호가 일치하지 않습니다.');
       return;
     }
 

@@ -9,25 +9,24 @@ import '/constants.dart';
 Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilter, int page = 0}) async {
   const String baseUrl = '$serverUrl/api/albums';
   final String url = tagFilter != null ? '$baseUrl/$groupId/$tagFilter/$page' : '$baseUrl/$groupId/$page';
-
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final List content = data['content'] ?? [];
+      print(data);
       return {
         'content': content.map((photo) {
           return {
             'photoId': photo['photoId'],
-            'fileName': photo['fileName'] ?? 'Unknown File',
-            'fileUrl': root + (photo['url'] ?? ''),
-            'imageSize': photo['imageSize'],
+            'fileUrl': root + photo['fileUrl'],
             'uploadDate': photo['uploadDate'] != null ? DateTime.parse(photo['uploadDate']) : DateTime.now(),
           };
         }).toList(),
         'totalPages': data['totalPages'],
         'totalElements': data['totalElements'],
       };
+      print(2);
     } else if (response.statusCode == 404) {
       // 404 처리: 빈 리스트 반환
       return {
@@ -55,7 +54,7 @@ Future<List<Map<String, dynamic>>> fetchGroupMembers(int groupId) async {
           'id': member['id'] ?? 0,
           'email': member['email'] ?? 'No email',
           'name': member['name'] ?? 'Unknown',
-          'profilePicturePath': member['profilePicture'], // 기본 이미지
+          'profilePicturePath': root + (member['profilePicture'] ?? ''), // 기본 이미지
           'createdAt': member['createdAt'] ?? DateTime.now().toIso8601String(),
         };
       }).toList();
