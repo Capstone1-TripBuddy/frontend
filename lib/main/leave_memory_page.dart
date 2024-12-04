@@ -49,10 +49,9 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
 
   Future<void> _loadPhotoActivity() async {
     setState(() => _isFetchingActivity = true);
-
     try {
       final activity = await fetchPhotoActivity(photoId: widget.photo['photoId']);
-
+      print(activity);
       setState(() {
         // 좋아요 데이터 초기화
         final bookmarks = activity['photoBookmarks'] as List<dynamic>;
@@ -124,7 +123,6 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
           userId: widget.userId,
           photoId: widget.photo['photoId'],
         );
-
         setState(() {
           _isLiked = true;
           _bookmarkId = bookmarkId; // 받은 bookmarkId 저장
@@ -225,7 +223,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       photo['fileUrl']!,
-                      height: 200,
+                      height: 400,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),

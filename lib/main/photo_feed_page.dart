@@ -25,6 +25,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
     super.initState();
     _loadPhotoActivities();
     _loadGroupMembers();
+    /*
     _notificationService = NotificationService();
     // 알림 스트림 구독
     _notificationService.notificationStream.listen((message) {
@@ -34,7 +35,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
     // 주기적으로 서버에서 알림 확인
     Timer.periodic(const Duration(seconds: 60), (_) {
       _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });
+    });*/
   }
 
   Future<void> _loadPhotoActivities() async {
@@ -57,7 +58,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
             'likes': activity['totalBookmarks'],
             'comments': comments,
             'totalReplies': activity['totalReplies'],
-            'imageUrl': 'assets/images/background.jpg', // 수정 필요
+            'imageUrl': activity['imageUrl'] ?? 'assets/images/background.jpg', // 수정 필요
             'isCommentsVisible': false,
           };
         }).toList();
@@ -104,6 +105,18 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
       _photoFeed[index]['isCommentsVisible'] =
       !_photoFeed[index]['isCommentsVisible'];
     });
+  }
+
+  Future<Size> _getImageSize(String imageUrl) async {
+    final Completer<Size> completer = Completer();
+    final Image image = Image.network(imageUrl);
+    image.image.resolve(const ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        final myImage = info.image;
+        completer.complete(Size(myImage.width.toDouble(), myImage.height.toDouble()));
+      }),
+    );
+    return completer.future;
   }
 
   @override
@@ -167,11 +180,27 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
             // 이미지
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                imageUrl,
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
+              child: FutureBuilder<Size>(
+                future: _getImageSize(imageUrl),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                  }
+                  final aspectRatio = snapshot.data!.width / snapshot.data!.height;
+                  return AspectRatio(
+                    aspectRatio: aspectRatio, // 동적으로 계산된 비율
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                      },
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 12),

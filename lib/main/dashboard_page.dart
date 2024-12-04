@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../welcome/user_provider.dart';
 import '../group/group_provider.dart';
@@ -36,26 +37,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int? _selectedMember; // 선택된 멤버 ID
   String? _selectedTag; // 선택된 태그
-
-  int _currentPage = 0; //scroll
-  int _totalPages = 1;
-  final ScrollController _scrollController = ScrollController();
+  String? _selectedMemberName;
 
   bool _isLoading = true;
   bool _isLoadingMembers = true;
-  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
-    _loadPhotos();
-    _loadMorePhotos();
+    _requestPermissions();
+    _loadAllPhotos();
     _loadMembers();
-    _scrollController.addListener(() {
-      if (_scrollController.position.extentAfter < 300 && !_isLoadingMore && _currentPage + 1 < _totalPages) {
-        _loadMorePhotos();
-      }
-    });
+    /*
     _notificationService = NotificationService();
 
     // 알림 스트림 구독
@@ -66,47 +59,51 @@ class _DashboardPageState extends State<DashboardPage> {
     // 주기적으로 서버에서 알림 확인
     Timer.periodic(const Duration(seconds: 60), (_) {
       _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });
+    });*/
   }
+  Future<void> _requestPermissions() async {
+    // 권한 요청
+    PermissionStatus status = await Permission.manageExternalStorage.request();
 
-  Future<void> _loadPhotos([String? tagFilter, int page = 0]) async {
-    setState(() => _isLoading = true);
-    print(1);
-    try {
-      final photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: tagFilter, page: page);
-      print(2);
-      setState(() {
-        _photos = photos['content'];
-        _totalPages = photos['totalPages'];
-        _currentPage = page;
-      });
-      print(3);
-      print(photos);
-    } catch (e) {
-      //print('Error loading photos: $e');
-    } finally {
-      setState(() => _isLoading = false);
+    if (status.isGranted) {
+      print("권한 허용됨");
+    } else if (status.isDenied) {
+      print("권한 거부됨");
+      // 거부 시 권한 설정 페이지로 안내
+      openAppSettings();
+    } else if (status.isPermanentlyDenied) {
+      print("권한 영구 거부됨");
+      openAppSettings(); // 앱 설정 페이지로 이동
     }
   }
 
-  Future<void> _loadMorePhotos() async {
-    if (_currentPage + 1 >= _totalPages) return;
+  Future<void> _loadAllPhotos({String? tagFilter}) async {
+    setState(() {
+      _isLoading = true;
+      _photos = []; // 데이터를 새로 로드하므로 기존 데이터를 초기화합니다.
+    });
 
-    setState(() => _isLoadingMore = true);
+    int currentPage = 0;
+    int totalPages = 1;
+
     try {
-      final nextPage = _currentPage + 1;
-      final photos = await fetchPhotosByGroupId(widget.groupId, tagFilter: _selectedTag, page: nextPage);
-      setState(() {
-        _photos.addAll(photos['content']);
-        _currentPage = nextPage;
-      });
+      while (currentPage < totalPages) {
+        final result = await fetchPhotosByGroupId(
+          widget.groupId,
+          tagFilter: tagFilter,
+          page: currentPage,
+        );
+
+        setState(() {
+          _photos.addAll(result['content']);
+          totalPages = result['totalPages'];
+          currentPage++;
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading more photos: $e')),
-      );
+      print('$e');
     } finally {
-      setState(() => _isLoadingMore = false);
+      setState(() => _isLoading = false);
     }
   }
 
@@ -127,14 +124,37 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _downloadAndUnzipAlbum() async {
-    final String albumName = _selectedTag ?? _selectedMember.toString();
+  Future<void> _loadLikedPhotos() async {
+    setState(() => _isLoading = true);
     try {
+      final bookmarks = await fetchUserBookmarks(widget.userId);
+
+      // 좋아요한 사진의 photoId 리스트
+      final likedPhotoIds = bookmarks.map((bookmark) => bookmark['photoId']).toList();
+
+      // 현재 로드된 모든 사진 중에서 좋아요한 사진만 필터링
+      final likedPhotos = _photos.where((photo) => likedPhotoIds.contains(photo['photoId'])).toList();
+
+      setState(() {
+        _photos = likedPhotos;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('좋아요한 사진 데이터를 불러오지 못했습니다: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _downloadAndUnzipAlbum() async {
+    // 저장소 작업 실행
+    try {
+      final String? albumName = _selectedTag ?? _selectedMemberName;
       await downloadAlbumAndExtract(
         groupId: widget.groupId,
-        albumName: albumName,
+        albumName: albumName.toString(),
       );
-      if(!mounted)return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('앨범 다운로드 및 압축 해제 완료')),
       );
@@ -143,6 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
         SnackBar(content: Text('다운로드 중 오류 발생: $e')),
       );
     }
+
   }
   @override
   Widget build(BuildContext context) {
@@ -158,10 +179,10 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white10,
         title: Text(
           groupName,
-          style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         leading: Builder(
           builder: (context) {
@@ -270,34 +291,35 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-      body:  RefreshIndicator(
-        onRefresh: () async {
-          await _loadPhotos(); // 최신 데이터 불러오기
-        },
-        child: _isLoading || _isLoadingMembers
-            ? const Center(child: CircularProgressIndicator())
-            : _photos.isEmpty
-            ? RefreshIndicator(
-          onRefresh: () async {
-            await _loadPhotos();
-          },
-              child: const Center(
-                  child: Text(
-                    '사진이 없습니다.\n사진을 업로드 해보세요!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
-            )
-            : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+      body:  Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/dashboardback.jpg'), // 배경 이미지 파일 경로
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Container(
+            color: Colors.white.withOpacity(0.8),
+          ),
+          RefreshIndicator(
+            onRefresh: () async {
+              await _loadAllPhotos(); // 최신 데이터 불러오기
+            },
+            child: _isLoading || _isLoadingMembers
+                ? const Center(child: CircularProgressIndicator())
+                : _photos.isEmpty
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 6),
                     const Text(
-                      '태그',
-                      style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    '  태그',
+                    style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                     const SizedBox(height: 16),
                     // 태그 버튼
                     SingleChildScrollView(
@@ -316,20 +338,52 @@ class _DashboardPageState extends State<DashboardPage> {
                       thickness: 1.0,     // 선 두께
                     ),
                     const SizedBox(height: 6),
-                    // 날짜 구분
-                    Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            itemCount: groupedPhotos.keys.length + (_isLoadingMore ? 1 : 0),
-                            itemBuilder: (context, dateIndex) {
-                              if (dateIndex == groupedPhotos.keys.length) {
-                                // 로딩 인디케이터 추가
-                                return const Center(child: CircularProgressIndicator());
-                              }
-                              final date = groupedPhotos.keys.elementAt(dateIndex);
-                              final photos = groupedPhotos[date]!;
+                    const Center(
+                        child: Text(
+                          '사진이 없습니다.\n사진을 업로드 해보세요!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    ]
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(16.0),
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '태그',
+                            style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          // 태그 버튼
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal, // 가로로 스크롤 가능
+                            child: Row(
+                              children: [
+                                // 멤버 버튼
+                                ..._buildMemberButtons(),
+                                // 태그 버튼
+                                ..._buildTagButtons(),
+                                // 좋아요 버튼
+                                ..._buildLikeButton(),
+                              ],
+                            ),
+                          ),
+                          const Divider(
+                            color: Colors.grey, // 선 색상
+                            thickness: 1.0,     // 선 두께
+                          ),
+                          const SizedBox(height: 6),
+                        // 날짜 구분
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: groupedPhotos.entries.map((entry) {
+                              final date = entry.key;
+                              final photos = entry.value;
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -356,69 +410,77 @@ class _DashboardPageState extends State<DashboardPage> {
                                           // 사진 클릭 로직
                                           _showPhotoDialog(context, photos, index);
                                         },
-                                        child: Stack(
-                                          children: [
-                                            Image.network(
-                                              '${photo['fileUrl']}',
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
-                                              },
-                                              loadingBuilder: (context, child, loadingProgress) {
-                                                if (loadingProgress == null) return child;
-                                                return const Center(
-                                                  child: CircularProgressIndicator(),
-                                                );
-                                              },
-                                            ),
-                                            Positioned(
-                                              top: 8,
-                                              right: 8,
-                                              child: PopupMenuButton<String>(
-                                                onSelected: (value) {
-                                                  if (value == 'memory') {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) => LeaveMemoryPage(
-                                                          photo: {
-                                                            'photoId': photo['photoId'], // photoId 전달
-                                                            'fileUrl': photo['fileUrl'], // fileUrl 전달
-                                                          },
-                                                          groupId: widget.groupId, // 전달할 groupId
-                                                          userId: widget.userId,  // 전달할 userId
-                                                        ),
-                                                      ),
-                                                    );// 메모 남기기 로직
-                                                  }
-                                                },
-                                                icon: const Icon(Icons.more_vert, color: Colors.white),
-                                                itemBuilder: (BuildContext context) => [
-                                                  const PopupMenuItem(
-                                                    value: 'memory',
-                                                    child: ListTile(
-                                                      leading: Icon(Icons.comment),
-                                                      title: Text('추억 남기기'),
-                                                    ),
+                                        child: AspectRatio(
+                                          aspectRatio: 1/1,
+                                          child: Stack(
+                                            children: [
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius:BorderRadius.circular(4.0),
+                                                  child: Image.network(
+                                                    '${photo['fileUrl']}',
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                                                    },
+                                                    loadingBuilder: (context, child, loadingProgress) {
+                                                      if (loadingProgress == null) return child;
+                                                      return const Center(
+                                                        child: CircularProgressIndicator(),
+                                                      );
+                                                    },
                                                   ),
-                                                ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: PopupMenuButton<String>(
+                                                  onSelected: (value) {
+                                                    if (value == 'memory') {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => LeaveMemoryPage(
+                                                            photo: {
+                                                              'photoId': photo['photoId'], // photoId 전달
+                                                              'fileUrl': photo['fileUrl'], // fileUrl 전달
+                                                            },
+                                                            groupId: widget.groupId, // 전달할 groupId
+                                                            userId: widget.userId, // 전달할 userId
+                                                          ),
+                                                        ),
+                                                      ); // 메모 남기기 로직
+                                                    }
+                                                  },
+                                                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                                                  itemBuilder: (BuildContext context) => [
+                                                    const PopupMenuItem(
+                                                      value: 'memory',
+                                                      child: ListTile(
+                                                        leading: Icon(Icons.comment),
+                                                        title: Text('추억 남기기'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       );
                                     },
                                   ),
                                 ],
                               );
-                            },
+                            }).toList(),
                           ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+                    ],
+                  ),
+                    ]
+                ),
+          ),
+        ],
       ),
       // 사진 피드로
       floatingActionButton: FloatingActionButton(
@@ -439,6 +501,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Widget> _buildMemberButtons() {
     return _members.map((member) {
       final isSelected = _selectedMember == member['id'];
+      final isSelectedName = _selectedMemberName == member['name'];
       final profilePicture = member['profilePicturePath']; // 기본 이미지 설정
       return Padding(
         padding: const EdgeInsets.only(right: 8.0),
@@ -447,14 +510,14 @@ class _DashboardPageState extends State<DashboardPage> {
             setState(() {
               if (isSelected) {
                 _selectedMember = null; // 해제
-                _loadPhotos(); // 기본 API 호출
+                _loadAllPhotos(); // 기본 API 호출
               } else {
                 _selectedMember = member['id']; // 선택
                 _selectedTag = null; // 태그 선택 해제
-                _loadPhotos(member['id'].toString());
+                _loadAllPhotos(tagFilter: member['id'].toString());
               }
             });
-            _loadPhotos(member['id'].toString());
+            //_loadAllPhotos(tagFilter: member['id'].toString());
           },
           icon: CircleAvatar(
             radius: 12,
@@ -495,14 +558,14 @@ class _DashboardPageState extends State<DashboardPage> {
             setState(() {
               if (isSelected) {
                 _selectedTag = null; // 해제
-                _loadPhotos(); // 기본 API 호출
+                _loadAllPhotos(); // 기본 API 호출
               } else {
                 _selectedTag = tag['label']; // 선택
                 _selectedMember = null; // 멤버 선택 해제
-                _loadPhotos(tagFilter);
+                _loadAllPhotos(tagFilter: tagFilter);
               }
             });
-            _loadPhotos(tagFilter);
+            //_loadAllPhotos(tagFilter: tagFilter);
           },
           icon: Icon(
             tag['icon'],
@@ -530,6 +593,33 @@ class _DashboardPageState extends State<DashboardPage> {
     }).toList();
   }
 
+  // 좋아요 버튼 리스트 생성
+  List<Widget> _buildLikeButton() {
+    return [
+      Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            await _loadLikedPhotos(); // 좋아요한 사진 로드
+          },
+          icon: const Icon(Icons.favorite, size: 12, color: Colors.red),
+          label: const Text(
+            '좋아요',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+            side: const BorderSide(color: Colors.grey),
+          ),
+        ),
+      ),
+    ];
+  }
 //서버에서 가져오는 사진 데이터
   Map<String, List<Map<String, dynamic>>> _groupPhotosByDate() {
     final Map<String, List<Map<String, dynamic>>> groupedPhotos = {};

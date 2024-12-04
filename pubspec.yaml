@@ -44,6 +44,7 @@ dependencies:
   exif: ^3.3.0
   http_parser: ^4.0.2
   archive: ^3.6.1
+  external_path: ^2.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -73,6 +74,7 @@ flutter:
      - assets/images/welcomebackground.jpg
      - assets/images/profilebase.PNG
      - assets/images/default_album.PNG
+     - assets/images/dashboardback.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

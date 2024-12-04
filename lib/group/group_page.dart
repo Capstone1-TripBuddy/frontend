@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'group_list_page.dart';
 
 
 class GroupPage extends StatelessWidget{

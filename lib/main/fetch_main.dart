@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:external_path/external_path.dart';
 import 'package:archive/archive_io.dart';
 import '/constants.dart';
 
@@ -9,6 +10,7 @@ import '/constants.dart';
 Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilter, int page = 0}) async {
   const String baseUrl = '$serverUrl/api/albums';
   final String url = tagFilter != null ? '$baseUrl/$groupId/$tagFilter/$page' : '$baseUrl/$groupId/$page';
+  print(url);
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -26,7 +28,6 @@ Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilte
         'totalPages': data['totalPages'],
         'totalElements': data['totalElements'],
       };
-      print(2);
     } else if (response.statusCode == 404) {
       // 404 처리: 빈 리스트 반환
       return {
@@ -69,6 +70,7 @@ Future<List<Map<String, dynamic>>> fetchGroupMembers(int groupId) async {
 ///다운로드
 Future<void> downloadAlbumAndExtract({required int groupId, required String albumName,}) async {
   final String url = '$serverUrl/api/albums/$groupId/$albumName/download';
+  //url이 잘못된 것 같은데?
   try {
     // DCIM 폴더 가져오기
     final Directory? dcimDir = await _getDCIMDirectory();
@@ -80,6 +82,8 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
 
     // 서버로부터 ZIP 파일 다운로드
     final http.Response response = await http.get(Uri.parse(url));
+    print(response.body);
+    print(response.statusCode);
     if (response.statusCode == 200) {
       await zipFile.writeAsBytes(response.bodyBytes);
       print('ZIP file downloaded: $zipFilePath');
@@ -100,6 +104,21 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
     }
   } catch (e) {
     print('Error during download or extraction: $e');
+  }
+}
+
+/// 저장 장소 선정
+Future<Directory?> _getDCIMDirectory() async {
+  try {
+    final String dcimPath = await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DCIM);
+    final Directory dcimDir = Directory(dcimPath);
+    if (!await dcimDir.exists()) {
+      await dcimDir.create(recursive: true);
+    }
+    return dcimDir;
+  } catch (e) {
+    print('Error getting DCIM directory: $e');
+    return null;
   }
 }
 
@@ -130,35 +149,33 @@ Future<void> _extractZipFile(String zipFilePath, String extractPath) async {
   }
 }
 
-/// 저장 장소 선정
-Future<Directory?> _getDCIMDirectory() async {
-  try {
-    final Directory? externalStorage = await getExternalStorageDirectory();
-    if (externalStorage != null) {
-      final Directory dcimDir = Directory('${externalStorage.parent.parent.path}/DCIM');
-      if (!await dcimDir.exists()) {
-        await dcimDir.create(recursive: true);
-      }
-      return dcimDir;
-    } else {
-      return null;
-    }
-  } catch (e) {
-    print('Error getting DCIM directory: $e');
-    return null;
-  }
-}
-
 ///좋아요, 댓글 불러오기
 Future<Map<String, dynamic>> fetchPhotoActivity({required int photoId}) async {
   final url = Uri.parse('$serverUrl/api/activity/photo/$photoId');
-
   final response = await http.get(url);
-
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
   } else {
     throw Exception('Failed to load photo activity: ${response.statusCode}');
+  }
+}
+
+/// 사용자가 좋아요한 사진 가져오기
+Future<List<Map<String, dynamic>>> fetchUserBookmarks(int userId) async {
+  final url = Uri.parse('$serverUrl/api/activity/bookmark/user/$userId');
+  try {
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map<Map<String, dynamic>>((bookmark) => {
+        'photoId': bookmark['photoId'],
+        'createdAt': bookmark['createdAt'],
+      }).toList();
+    } else {
+      throw Exception('Failed to fetch user bookmarks. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching user bookmarks: $e');
   }
 }
 
@@ -170,7 +187,6 @@ Future<int?> addBookmark({required int groupId, required int userId, required in
     "userId": userId,
     "photoId": photoId,
   });
-
   final response = await http.post(
     url,
     headers: {
@@ -178,10 +194,9 @@ Future<int?> addBookmark({required int groupId, required int userId, required in
     },
     body: body,
   );
-
   if (response.statusCode == 201) {
     final responseData = jsonDecode(response.body);
-    return responseData['bookmarkId']; // 서버에서 받은 bookmarkId 반환
+    return responseData; // 서버에서 받은 bookmarkId 반환
   } else {
     throw Exception("Failed to add bookmark: ${response.body}");
   }
@@ -268,7 +283,7 @@ Future<List<Map<String, dynamic>>> fetchPhotoQuestions({required int photoId}) a
 
 ///사진 피드 조회
 Future<List<Map<String, dynamic>>> fetchPhotoActivities({required int groupId}) async {
-  final url = Uri.parse('$serverUrl/api/activity/photo/$groupId');
+  final url = Uri.parse('$serverUrl/api/activity/group/$groupId');
 
   try {
     final response = await http.get(url);
@@ -277,11 +292,11 @@ Future<List<Map<String, dynamic>>> fetchPhotoActivities({required int groupId}) 
       final List<dynamic> data = json.decode(response.body);
       return data.map<Map<String, dynamic>>((activity) => {
         'photoId': activity['photoId'],
-        'totalBookmarks': activity['totalBookmarks'],
-        'totalReplies': activity['totalReplies'],
-        'photoBookmarks': activity['photoBookmarks'],
-        'photoReplies': activity['photoReplies'],
-        'photoQuestions': activity['photoQuestions'],
+        'imageUrl': root + activity['photoUrl'], // 서버에서 제공하는 URL 매핑
+        'totalBookmarks': activity['totalBookmarks'] ?? 0,
+        'totalReplies': activity['totalReplies'] ?? 0,
+        'photoReplies': activity['photoReplies'] ?? [],
+        'photoQuestions': activity['photoQuestions'] ?? [],
       }).toList();
     } else {
       throw Exception('Failed to fetch photo activities. Status code: ${response.statusCode}');
