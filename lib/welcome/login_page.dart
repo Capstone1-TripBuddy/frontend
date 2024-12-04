@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants.dart';
 import 'user_provider.dart';
 import 'fetch_user.dart';
 
@@ -21,9 +22,7 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일과 비밀번호를 입력해주세요.')),
-      );
+      showCustomSnackBar(context, '이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
@@ -35,16 +34,11 @@ class _LoginPageState extends State<LoginPage> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await loginUser(email, password, userProvider.setUserData);
       userProvider.updateUserData({'email': email});
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인 성공!')),
-      );
+      if(!mounted)return;
+      showCustomSnackBar(context, '로그인 성공!');
       Navigator.pushNamed(context, '/group');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      print(e);
     } finally {
       setState(() {
         _isLoading = false;

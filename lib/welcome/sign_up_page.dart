@@ -55,8 +55,8 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() {
       _isLoading = false;
     });
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+    /// 여기 수정하기
+    showCustomSnackBar(context, result);
     if (result == '회원가입 성공') {
       Navigator.popUntil(context, ModalRoute.withName('/')); // 성공 시 이전 화면으로 이동
     }

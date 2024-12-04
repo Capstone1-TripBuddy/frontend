@@ -9,7 +9,7 @@ import '../notification/notification_overlay.dart';
 
 import 'profile_page.dart';
 import 'notification_page.dart';
-import 'photo_upload_ex_page.dart';
+import 'photo_upload_page.dart';
 import 'photo_feed_page.dart';
 import 'leave_memory_page.dart';
 import 'fetch_main.dart';
@@ -33,6 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
     {'label': '자연', 'icon': Icons.nature_people},
     {'label': '음식', 'icon': Icons.restaurant},
     {'label': '동물', 'icon': Icons.pets},
+    {'label': '좋아요', 'icon': Icons.favorite}, // 좋아요 태그 추가
   ];
 
   int? _selectedMember; // 선택된 멤버 ID
@@ -87,18 +88,31 @@ class _DashboardPageState extends State<DashboardPage> {
     int totalPages = 1;
 
     try {
-      while (currentPage < totalPages) {
-        final result = await fetchPhotosByGroupId(
-          widget.groupId,
-          tagFilter: tagFilter,
-          page: currentPage,
-        );
+      if (tagFilter == 'like') {
+        // 좋아요 태그 선택 시 좋아요한 사진을 불러옴
+        final bookmarks = await fetchUserBookmarks(widget.userId);
+        final likedPhotoIds = bookmarks.map((bookmark) => bookmark['photoId']).toList();
 
         setState(() {
-          _photos.addAll(result['content']);
-          totalPages = result['totalPages'];
-          currentPage++;
+          _photos = _photos
+              .where((photo) => likedPhotoIds.contains(photo['photoId']))
+              .toList();
         });
+      } else {
+        // 일반 태그 처리
+        while (currentPage < totalPages) {
+          final result = await fetchPhotosByGroupId(
+            widget.groupId,
+            tagFilter: tagFilter,
+            page: currentPage,
+          );
+
+          setState(() {
+            _photos.addAll(result['content']);
+            totalPages = result['totalPages'];
+            currentPage++;
+          });
+        }
       }
     } catch (e) {
       print('$e');
@@ -124,29 +138,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> _loadLikedPhotos() async {
-    setState(() => _isLoading = true);
-    try {
-      final bookmarks = await fetchUserBookmarks(widget.userId);
-
-      // 좋아요한 사진의 photoId 리스트
-      final likedPhotoIds = bookmarks.map((bookmark) => bookmark['photoId']).toList();
-
-      // 현재 로드된 모든 사진 중에서 좋아요한 사진만 필터링
-      final likedPhotos = _photos.where((photo) => likedPhotoIds.contains(photo['photoId'])).toList();
-
-      setState(() {
-        _photos = likedPhotos;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('좋아요한 사진 데이터를 불러오지 못했습니다: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   void _downloadAndUnzipAlbum() async {
     // 저장소 작업 실행
     try {
@@ -158,9 +149,6 @@ class _DashboardPageState extends State<DashboardPage> {
         );
         return;
       }
-
-      print(_selectedMemberName);
-      print(albumName);
       await downloadAlbumAndExtract(
         groupId: widget.groupId,
         albumName: albumName.toString(),
@@ -314,6 +302,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           RefreshIndicator(
             onRefresh: () async {
+              _selectedMemberName = null;
+              _selectedMember = null;
+              _selectedTag = null;
               await _loadAllPhotos(); // 최신 데이터 불러오기
             },
             child: _isLoading || _isLoadingMembers
@@ -376,8 +367,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ..._buildMemberButtons(),
                                 // 태그 버튼
                                 ..._buildTagButtons(),
-                                // 좋아요 버튼
-                                ..._buildLikeButton(),
                               ],
                             ),
                           ),
@@ -602,33 +591,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }).toList();
   }
 
-  // 좋아요 버튼 리스트 생성
-  List<Widget> _buildLikeButton() {
-    return [
-      Padding(
-        padding: const EdgeInsets.only(right: 8.0),
-        child: ElevatedButton.icon(
-          onPressed: () async {
-            await _loadLikedPhotos(); // 좋아요한 사진 로드
-          },
-          icon: const Icon(Icons.favorite, size: 12, color: Colors.red),
-          label: const Text(
-            '좋아요',
-            style: TextStyle(fontSize: 12, color: Colors.black),
-          ),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
-            side: const BorderSide(color: Colors.grey),
-          ),
-        ),
-      ),
-    ];
-  }
 //서버에서 가져오는 사진 데이터
   Map<String, List<Map<String, dynamic>>> _groupPhotosByDate() {
     final Map<String, List<Map<String, dynamic>>> groupedPhotos = {};
@@ -705,6 +667,8 @@ String _mapTagToFilter(String tag) {
       return 'food';
     case '동물':
       return 'animal';
+    case '좋아요':
+      return 'like'; // 좋아요 태그 필터
     default:
       return '';
   }

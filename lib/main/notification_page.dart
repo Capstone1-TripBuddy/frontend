@@ -24,7 +24,6 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
-
     try {
       final activities = await fetchGroupActivity(groupId: widget.groupId, userId: widget.userId);
       setState(() {
@@ -58,6 +57,8 @@ class _NotificationPageState extends State<NotificationPage> {
         return '사진에 좋아요를 추가했어요!';
       case 'comment':
         return '사진에 댓글을 추가했어요!';
+      case 'upload':
+        return '업로드랑 분류가 끝났어요!';
       default:
         return '활동을 했어요!';
     }
@@ -66,11 +67,13 @@ class _NotificationPageState extends State<NotificationPage> {
   IconData _mapActivityTypeToIcon(String activityType) {
     switch (activityType) {
       case 'share':
-        return Icons.chat_bubble;
+        return Icons.share;
       case 'bookmark':
-        return Icons.bookmark;
+        return Icons.favorite;
       case 'comment':
         return Icons.comment;
+      case 'upload':
+        return Icons.upload;
       default:
         return Icons.notifications;
     }
@@ -84,6 +87,8 @@ class _NotificationPageState extends State<NotificationPage> {
         return Colors.blue;
       case 'comment':
         return Colors.pinkAccent;
+      case 'upload':
+        return Colors.deepOrangeAccent;
       default:
         return Colors.grey;
     }
@@ -120,41 +125,46 @@ class _NotificationPageState extends State<NotificationPage> {
           },
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _notifications.isEmpty
-          ? const Center(
-              child: Text(
-                '최근 활동이 없습니다.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadNotifications();
+        },
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _notifications.isEmpty
+            ? const Center(
+                child: Text(
+                  '최근 활동이 없습니다.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: _notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = _notifications[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[300],
+                      child: Icon(notification['icon'], color: notification['iconColor']),
+                    ),
+                    title: Text(
+                      '${notification['name']} ${notification['action']}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      notification['time'],
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  );
+                },
+                separatorBuilder: (context, index) => const Divider(
+                  thickness: 0.5,
+                  color: Colors.grey,
+                ),
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey[300],
-                    child: Icon(notification['icon'], color: notification['iconColor']),
-                  ),
-                  title: Text(
-                    '${notification['name']} ${notification['action']}',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    notification['time'],
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                );
-              },
-              separatorBuilder: (context, index) => const Divider(
-                thickness: 0.5,
-                color: Colors.grey,
-              ),
-            ),
+      ),
     );
   }
 }

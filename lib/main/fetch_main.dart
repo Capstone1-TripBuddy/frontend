@@ -6,7 +6,7 @@ import 'package:external_path/external_path.dart';
 import 'package:archive/archive_io.dart';
 import '/constants.dart';
 
-/// 그룹 내 사진 조회
+// 그룹 내 사진 조회
 Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilter, int page = 0}) async {
   const String baseUrl = '$serverUrl/api/albums';
   final String url = tagFilter != null ? '$baseUrl/$groupId/$tagFilter/$page' : '$baseUrl/$groupId/$page';
@@ -43,7 +43,7 @@ Future<Map<String, dynamic>> fetchPhotosByGroupId(int groupId, {String? tagFilte
   }
 }
 
-/// 여행 그룹의 멤버들 정보 조회
+//여행 그룹의 멤버들 정보 조회
 Future<List<Map<String, dynamic>>> fetchGroupMembers(int groupId) async {
   final String url = '$serverUrl/api/groups/members/$groupId';
   try {
@@ -67,25 +67,26 @@ Future<List<Map<String, dynamic>>> fetchGroupMembers(int groupId) async {
   }
 }
 
-///다운로드
+//다운로드
 Future<void> downloadAlbumAndExtract({required int groupId, required String albumName,}) async {
   final String url = '$serverUrl/api/albums/$groupId/$albumName/download';
-  //url이 잘못된 것 같은데?
+
   try {
     // DCIM 폴더 가져오기
     final Directory? dcimDir = await _getDCIMDirectory();
+    print(dcimDir);
     if (dcimDir == null) throw Exception('DCIM directory not found.');
 
     // 다운로드할 ZIP 파일 경로
     final String zipFilePath = '${dcimDir.path}/$albumName.zip';
     final File zipFile = File(zipFilePath);
-
     // 서버로부터 ZIP 파일 다운로드
-    final http.Response response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url));
     print(response.body);
     // 디버깅용 로그
     print('Response status: ${response.statusCode}');
     print('Response headers: ${response.headers}');
+
     if (response.statusCode == 200) {
       await zipFile.writeAsBytes(response.bodyBytes);
       print('ZIP file downloaded: $zipFilePath');
@@ -109,7 +110,7 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
   }
 }
 
-/// 저장 장소 선정
+//저장 장소 선정
 Future<Directory?> _getDCIMDirectory() async {
   try {
     final String dcimPath = await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DCIM);
@@ -124,7 +125,7 @@ Future<Directory?> _getDCIMDirectory() async {
   }
 }
 
-///집 파일 압축 해제
+//집 파일 압축 해제
 Future<void> _extractZipFile(String zipFilePath, String extractPath) async {
   try {
     final File zipFile = File(zipFilePath);
@@ -151,7 +152,7 @@ Future<void> _extractZipFile(String zipFilePath, String extractPath) async {
   }
 }
 
-///좋아요, 댓글 불러오기
+//좋아요, 댓글 불러오기
 Future<Map<String, dynamic>> fetchPhotoActivity({required int photoId}) async {
   final url = Uri.parse('$serverUrl/api/activity/photo/$photoId');
   final response = await http.get(url);
@@ -167,6 +168,7 @@ Future<List<Map<String, dynamic>>> fetchUserBookmarks(int userId) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark/user/$userId');
   try {
     final response = await http.get(url);
+    print(response.body);
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map<Map<String, dynamic>>((bookmark) => {
@@ -181,7 +183,35 @@ Future<List<Map<String, dynamic>>> fetchUserBookmarks(int userId) async {
   }
 }
 
-///좋아요 저장
+///특정 사진 공유하기
+Future<bool> sharePhoto({required int groupId, required int userId, required int photoId,}) async {
+  final url = Uri.parse('$serverUrl/api/activity/share');
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'groupId': groupId,
+        'userId': userId,
+        'photoId': photoId,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print('공유 활동 성공');
+      return true;
+    } else {
+      print('공유 활동 실패: ${response.statusCode}');
+      return false;
+    }
+  } catch (e) {
+    print('서버 통신 오류: $e');
+    return false;
+  }
+}
+//좋아요 저장
 Future<int?> addBookmark({required int groupId, required int userId, required int photoId,}) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark');
   final body = json.encode({
@@ -204,7 +234,7 @@ Future<int?> addBookmark({required int groupId, required int userId, required in
   }
 }
 
-///좋아요 삭제
+//좋아요 삭제
 Future<void> deleteBookmark({required int bookmarkId}) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark/$bookmarkId');
 
@@ -215,7 +245,7 @@ Future<void> deleteBookmark({required int bookmarkId}) async {
   }
 }
 
-///댓글 저장
+//댓글 저장
 Future<int> savePhotoMemory({required int groupId, required int userId, required int photoId, required String content,}) async {
   final url = Uri.parse('$serverUrl/api/activity/reply');
   final response = await http.post(
@@ -237,7 +267,7 @@ Future<int> savePhotoMemory({required int groupId, required int userId, required
   }
 }
 
-///댓글 삭제
+//댓글 삭제
 Future<void> deletePhotoMemory({required int replyId}) async {
   final url = Uri.parse('$serverUrl/api/activity/reply/$replyId');
 
@@ -248,7 +278,7 @@ Future<void> deletePhotoMemory({required int replyId}) async {
   }
 }
 
-///그룹 내 좋아요, 댓글 조회
+///그룹 내 최신 활동 조회
 Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, required int userId}) async {
   final url = Uri.parse('$serverUrl/api/activity/group/$groupId/user/$userId');
 
@@ -262,13 +292,13 @@ Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, req
   }
 }
 
-///AI 질문
+//AI 질문
 Future<List<Map<String, dynamic>>> fetchPhotoQuestions({required int photoId}) async {
   final url = Uri.parse('$serverUrl/api/activity/question/$photoId');
 
   try {
     final response = await http.get(url);
-
+    print(response.body);
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map<Map<String, dynamic>>((q) => {
@@ -283,7 +313,7 @@ Future<List<Map<String, dynamic>>> fetchPhotoQuestions({required int photoId}) a
   }
 }
 
-///사진 피드 조회
+//사진 피드 조회
 Future<List<Map<String, dynamic>>> fetchPhotoActivities({required int groupId}) async {
   final url = Uri.parse('$serverUrl/api/activity/group/$groupId');
 

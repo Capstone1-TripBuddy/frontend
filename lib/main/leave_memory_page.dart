@@ -34,6 +34,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
     super.initState();
     _loadPhotoActivity();
     _fetchQuestions();
+    /*
     _notificationService = NotificationService();
 
     // 알림 스트림 구독
@@ -44,7 +45,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
     // 주기적으로 서버에서 알림 확인
     Timer.periodic(const Duration(seconds: 15), (_) {
       _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });
+    });*/
   }
 
   Future<void> _loadPhotoActivity() async {
@@ -71,10 +72,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
         }
       });
     } catch (e) {
-      if(!mounted)return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('활동 정보를 불러오지 못했습니다: $e')),
-      );
+      print('활동 정보를 불러오지 못했습니다:  $e');
     } finally {
       setState(() => _isFetchingActivity = false);
     }
@@ -82,7 +80,6 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
 
   Future<void> _fetchQuestions() async {
     setState(() => _isFetchingQuestions = true);
-
     try {
       final questions = await fetchPhotoQuestions(photoId: widget.photo['photoId']);
 
@@ -90,10 +87,7 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
         _questions = questions.map<String>((q) => q['content'].toString()).toList();
       });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('질문을 가져오지 못했습니다: $e')),
-      );
+      print('질문을 가져오지 못했습니다: $e');
     } finally {
       setState(() => _isFetchingQuestions = false);
     }
@@ -112,10 +106,6 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
           _isLiked = false;
           _bookmarkId = null; // 북마크 ID 초기화
         });
-        if(!mounted)return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("북마크가 성공적으로 삭제되었습니다!")),
-        );
       } else {
         // 좋아요를 추가하는 경우
         final bookmarkId = await addBookmark(
@@ -127,15 +117,9 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
           _isLiked = true;
           _bookmarkId = bookmarkId; // 받은 bookmarkId 저장
         });
-        if(!mounted)return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("북마크가 성공적으로 추가되었습니다!")),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("북마크 추가 실패: $e")),
-      );
+      print("북마크 추가 실패: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -151,10 +135,6 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
         setState(() {
           _replyId = null; // 댓글 ID 초기화
         });
-        if(!mounted)return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("댓글이 성공적으로 삭제되었습니다!")),
-        );
       } else if (_responses.isNotEmpty) {
         // 텍스트 필드가 비어 있지 않은 경우 저장 요청
         final replyId = await savePhotoMemory(
@@ -167,20 +147,26 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
         setState(() {
           _replyId = replyId; // 저장된 댓글 ID
         });
-        if(!mounted)return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("추억이 성공적으로 저장되었습니다!")),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("요청 실패: $e")),
-      );
+      print("요청 실패: $e");
     } finally {
       setState(() => _isSavingMemory = false);
     }
   }
+  Future<void> _handleSharePhoto() async {
+    final isShared = await sharePhoto(groupId: widget.groupId, userId: widget.userId, photoId: widget.photo['photoId'],);
 
+    if (isShared) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('사진이 성공적으로 공유되었습니다!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('사진 공유에 실패했습니다.')),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final photo = widget.photo;
@@ -194,6 +180,10 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
       appBar: AppBar(
         title: const Text("나의 추억"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            onPressed: _handleSharePhoto,
+          ),
           IconButton(
             icon: _isLoading
                 ? const SizedBox(

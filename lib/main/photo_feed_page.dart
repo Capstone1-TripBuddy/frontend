@@ -61,7 +61,9 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
             'imageUrl': activity['imageUrl'] ?? 'assets/images/background.jpg', // 수정 필요
             'isCommentsVisible': false,
           };
-        }).toList();
+        }).where((photo) =>
+        photo['likes'] > 0 || photo['totalReplies'] > 0) // 필터링 조건
+        .toList();
       });
     } catch (e) {
       if (!mounted) return;

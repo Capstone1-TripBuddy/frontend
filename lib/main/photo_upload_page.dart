@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
-import 'package:exif/exif.dart';
 import '/constants.dart';
 
 class PhotoUploadPage extends StatefulWidget {
@@ -13,57 +11,54 @@ class PhotoUploadPage extends StatefulWidget {
   const PhotoUploadPage({super.key, required this.groupId, required this.userId});
 
   @override
-  _PhotoUploadPageState createState() => _PhotoUploadPageState();
+  State<PhotoUploadPage> createState() => _PhotoUploadPageState();
 }
 
 class _PhotoUploadPageState extends State<PhotoUploadPage> {
-  final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _selectedImages = [];
   bool _isUploading = false;
 
-  Future<void> pickImages() async {
-    final List<XFile>? pickedImages = await _picker.pickMultiImage();
+  Future<void> pickFolder() async {
+    // 폴더 선택
+    String? selectedFolder = await FilePicker.platform.getDirectoryPath();
 
-    if (pickedImages != null) {
+    if (selectedFolder != null) {
+      final directory = Directory(selectedFolder);
       List<Map<String, dynamic>> imagesWithMetadata = [];
-      for (var xfile in pickedImages) {
-        File file = File(xfile.path);
+      final files = directory.listSync();
 
-        // EXIF 데이터에서 촬영 시간 추출
-        String? takenAt = await _getTakenAt(file);
-
-        imagesWithMetadata.add({
-          'file': file,
-          'takenAt': takenAt ?? 'Unknown', // 촬영 시간 없으면 기본값
-        });
+      for (var file in files) {
+        if (file is File && _isImage(file.path)) {
+          String? takenAt = await _getFileCreationDate(file);
+          print(file);
+          print(takenAt);
+          imagesWithMetadata.add({
+            'file': file,
+            'takenAt': takenAt ?? 'Unknown',
+          });
+        }
       }
+
       setState(() {
         _selectedImages = imagesWithMetadata;
       });
     }
   }
 
-  Future<String?> _getTakenAt(File file) async {
-    try {
-      final bytes = await file.readAsBytes();
-      final tags = await readExifFromBytes(bytes);
-
-      if (tags.containsKey('Image DateTime')) {
-        return tags['Image DateTime']?.printable; // EXIF 촬영 시간
-      } else if (tags.containsKey('EXIF DateTimeOriginal')) {
-        return tags['EXIF DateTimeOriginal']?.printable;
-      }
-    } catch (e) {
-      print('Error reading EXIF data: $e');
-    }
-    return null;
+  bool _isImage(String path) {
+    // 이미지 파일인지 확인
+    final extensions = ['jpg', 'jpeg', 'png', 'gif'];
+    final ext = path.split('.').last.toLowerCase();
+    return extensions.contains(ext);
   }
 
-  Future<void> requestPermissions() async {
-    if (await Permission.photos.request().isGranted) {
-      await pickImages();
-    } else {
-      print('사진 접근 권한이 필요합니다.');
+  Future<String?> _getFileCreationDate(File file) async {
+    try {
+      final stat = await file.stat();
+      return stat.changed.toIso8601String(); // 파일의 생성 날짜를 ISO 8601 형식으로 반환
+    } catch (e) {
+      print('Error getting file creation date: $e');
+      return null;
     }
   }
 
@@ -75,23 +70,31 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
     try {
       final uri = Uri.parse('$serverUrl/api/albums/upload');
       var request = http.MultipartRequest('POST', uri);
+
+      // 그룹 ID 및 사용자 ID 추가
       request.fields['groupId'] = widget.groupId.toString();
       request.fields['userId'] = widget.userId.toString();
-
+      List<String> takenAtList = [];
+      // 파일 정보 추가
       for (var imageData in _selectedImages) {
         File file = imageData['file'];
         String takenAt = imageData['takenAt'];
 
+        // 사진 파일 추가
         request.files.add(await http.MultipartFile.fromPath(
           'photos', // 서버에서 기대하는 필드 이름
           file.path,
         ));
-        request.fields['takenAt'] = takenAt; // 촬영 시간 추가
+        // 촬영 시간 추가
+        takenAtList.add(takenAt);
       }
-
+      request.fields['takenAt'] = takenAtList.join(',');
+      print(request.fields);
+      print(request.files);
+      // 서버로 전송
       var response = await request.send();
-      print(response.statusCode);
       if (!mounted) return;
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('사진이 성공적으로 업로드되었습니다!'),
@@ -100,27 +103,17 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
           _selectedImages.clear();
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('업로드 실패. 다시 시도해주세요.'),
-        ));
+        print('업로드 실패. 다시 시도해주세요.');
       }
     } catch (e) {
       print('Error uploading images: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('업로드 중 오류가 발생했습니다.'),
-      ));
     } finally {
       setState(() {
         _isUploading = false;
       });
     }
   }
-  /*
-  void _clearSelectedImages() {
-    setState(() {
-      _selectedImages.clear();
-    });
-  }*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,7 +167,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                     dashPattern: const [8, 4],
                     color: Colors.grey,
                     child: GestureDetector(
-                      onTap: pickImages,
+                      onTap: pickFolder,
                       child: Container(
                         width: double.infinity,
                         height: 150,
@@ -185,10 +178,10 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.cloud_upload, size: 48, color: Colors.grey),
+                            Icon(Icons.folder_open, size: 48, color: Colors.grey),
                             SizedBox(height: 8),
                             Text(
-                              '파일을 클릭하여 업로드하세요',
+                              '폴더를 클릭하여 업로드하세요',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
@@ -242,8 +235,8 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
                           : null,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: _selectedImages.isNotEmpty
-                            ? Colors.blue
-                            : Colors.grey,
+                          ? Colors.blue
+                          : Colors.grey,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
