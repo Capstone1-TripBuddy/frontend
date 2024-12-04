@@ -83,7 +83,9 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
     // 서버로부터 ZIP 파일 다운로드
     final http.Response response = await http.get(Uri.parse(url));
     print(response.body);
-    print(response.statusCode);
+    // 디버깅용 로그
+    print('Response status: ${response.statusCode}');
+    print('Response headers: ${response.headers}');
     if (response.statusCode == 200) {
       await zipFile.writeAsBytes(response.bodyBytes);
       print('ZIP file downloaded: $zipFilePath');

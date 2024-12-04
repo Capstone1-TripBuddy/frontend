@@ -9,7 +9,7 @@ import '../notification/notification_overlay.dart';
 
 import 'profile_page.dart';
 import 'notification_page.dart';
-import 'photo_upload_page.dart';
+import 'photo_upload_ex_page.dart';
 import 'photo_feed_page.dart';
 import 'leave_memory_page.dart';
 import 'fetch_main.dart';
@@ -150,7 +150,17 @@ class _DashboardPageState extends State<DashboardPage> {
   void _downloadAndUnzipAlbum() async {
     // 저장소 작업 실행
     try {
-      final String? albumName = _selectedTag ?? _selectedMemberName;
+      final String? albumName = _selectedMemberName ?? _selectedTag;
+      if (albumName == null || albumName.isEmpty) {
+        // 선택된 값이 없으면 사용자에게 알림
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('앨범 이름을 선택해주세요.')),
+        );
+        return;
+      }
+
+      print(_selectedMemberName);
+      print(albumName);
       await downloadAlbumAndExtract(
         groupId: widget.groupId,
         albumName: albumName.toString(),
@@ -159,9 +169,7 @@ class _DashboardPageState extends State<DashboardPage> {
         const SnackBar(content: Text('앨범 다운로드 및 압축 해제 완료')),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('다운로드 중 오류 발생: $e')),
-      );
+      print(e);
     }
 
   }
@@ -302,7 +310,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           Container(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withOpacity(0.9),
           ),
           RefreshIndicator(
             onRefresh: () async {
@@ -501,7 +509,6 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Widget> _buildMemberButtons() {
     return _members.map((member) {
       final isSelected = _selectedMember == member['id'];
-      final isSelectedName = _selectedMemberName == member['name'];
       final profilePicture = member['profilePicturePath']; // 기본 이미지 설정
       return Padding(
         padding: const EdgeInsets.only(right: 8.0),
@@ -510,9 +517,11 @@ class _DashboardPageState extends State<DashboardPage> {
             setState(() {
               if (isSelected) {
                 _selectedMember = null; // 해제
+                _selectedMemberName = null;
                 _loadAllPhotos(); // 기본 API 호출
               } else {
                 _selectedMember = member['id']; // 선택
+                _selectedMemberName = member['name'];
                 _selectedTag = null; // 태그 선택 해제
                 _loadAllPhotos(tagFilter: member['id'].toString());
               }
