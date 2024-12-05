@@ -139,24 +139,30 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
           },
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount:  _photoFeed.length, // 예시 데이터 개수
-              itemBuilder: (context, index) {
-                final feed = _photoFeed[index];
-                return _buildPhotoFeedItem(
-                  context,
-                  index,
-                  feed['imageUrl'],
-                  feed['likes'],
-                  feed['totalReplies'],
-                  feed['comments'],
-                  feed['isCommentsVisible'],
-                );
-              },
-            ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadPhotoActivities();
+          await _loadGroupMembers();
+        },
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount:  _photoFeed.length, // 예시 데이터 개수
+                itemBuilder: (context, index) {
+                  final feed = _photoFeed[index];
+                  return _buildPhotoFeedItem(
+                    context,
+                    index,
+                    feed['imageUrl'],
+                    feed['likes'],
+                    feed['totalReplies'],
+                    feed['comments'],
+                    feed['isCommentsVisible'],
+                  );
+                },
+              ),
+      ),
     );
   }
 

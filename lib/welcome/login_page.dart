@@ -34,8 +34,6 @@ class _LoginPageState extends State<LoginPage> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await loginUser(email, password, userProvider.setUserData);
       userProvider.updateUserData({'email': email});
-      if(!mounted)return;
-      showCustomSnackBar(context, '로그인 성공!');
       Navigator.pushNamed(context, '/group');
     } catch (e) {
       print(e);
