@@ -24,9 +24,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  late final NotificationService _notificationService;
-
   List<Map<String, dynamic>> _photos = [];
+  List<Map<String, dynamic>> _photosAll = [];
   List<Map<String, dynamic>> _members = [];
   final List<Map<String, dynamic>> _tags = [
     {'label': '도시', 'icon': Icons.location_city},
@@ -49,18 +48,6 @@ class _DashboardPageState extends State<DashboardPage> {
     _requestPermissions();
     _loadAllPhotos();
     _loadMembers();
-    /*
-    _notificationService = NotificationService();
-
-    // 알림 스트림 구독
-    _notificationService.notificationStream.listen((message) {
-      NotificationOverlayManager().show(context, message);
-    });
-
-    // 주기적으로 서버에서 알림 확인
-    Timer.periodic(const Duration(seconds: 60), (_) {
-      _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });*/
   }
   Future<void> _requestPermissions() async {
     // 권한 요청
@@ -86,17 +73,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
     int currentPage = 0;
     int totalPages = 1;
-
+    print(tagFilter);
     try {
       if (tagFilter == 'like') {
         // 좋아요 태그 선택 시 좋아요한 사진을 불러옴
         final bookmarks = await fetchUserBookmarks(widget.userId);
         final likedPhotoIds = bookmarks.map((bookmark) => bookmark['photoId']).toList();
-
+        print(likedPhotoIds);
         setState(() {
-          _photos = _photos
+          _photos = _photosAll
               .where((photo) => likedPhotoIds.contains(photo['photoId']))
               .toList();
+          _photosAll = [];
         });
       } else {
         // 일반 태그 처리
@@ -109,6 +97,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
           setState(() {
             _photos.addAll(result['content']);
+            //좋아요 기능을 위한 All
+            if(tagFilter==null){
+              _photosAll.addAll(result['content']);
+            }
             totalPages = result['totalPages'];
             currentPage++;
           });

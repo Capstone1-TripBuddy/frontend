@@ -53,7 +53,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => InviteCodePage(inviteCode: groupData['inviteCode']),
+          builder: (context) => InviteCodePage(inviteCode: groupData['inviteCode'], groupId: groupData['id']),
         ),
       );// 그룹 생성 완료 후 이전 페이지로 이동
     } catch (e) {

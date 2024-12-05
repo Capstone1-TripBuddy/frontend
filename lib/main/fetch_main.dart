@@ -163,7 +163,7 @@ Future<Map<String, dynamic>> fetchPhotoActivity({required int photoId}) async {
   }
 }
 
-/// 사용자가 좋아요한 사진 가져오기
+// 사용자가 좋아요한 사진 가져오기
 Future<List<Map<String, dynamic>>> fetchUserBookmarks(int userId) async {
   final url = Uri.parse('$serverUrl/api/activity/bookmark/user/$userId');
   try {
@@ -183,7 +183,7 @@ Future<List<Map<String, dynamic>>> fetchUserBookmarks(int userId) async {
   }
 }
 
-///특정 사진 공유하기
+//특정 사진 공유하기
 Future<bool> sharePhoto({required int groupId, required int userId, required int photoId,}) async {
   final url = Uri.parse('$serverUrl/api/activity/share');
   try {
@@ -278,7 +278,7 @@ Future<void> deletePhotoMemory({required int replyId}) async {
   }
 }
 
-///그룹 내 최신 활동 조회
+//그룹 내 최신 활동 조회
 Future<List<Map<String, dynamic>>> fetchGroupActivity({required int groupId, required int userId}) async {
   final url = Uri.parse('$serverUrl/api/activity/group/$groupId/user/$userId');
 

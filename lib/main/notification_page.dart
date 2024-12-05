@@ -32,7 +32,7 @@ class _NotificationPageState extends State<NotificationPage> {
           final actionText = _mapActivityTypeToText(activityType);
 
           return {
-            'name': 'User ${activity['userId']}', // Replace with actual userName if available
+            'name': activity['userName'], // Replace with actual userName if available
             'time': _formatTime(activity['createdAt']),
             'action': actionText,
             'icon': _mapActivityTypeToIcon(activityType),
@@ -55,7 +55,7 @@ class _NotificationPageState extends State<NotificationPage> {
         return '추억을 공유했어요!';
       case 'bookmark':
         return '사진에 좋아요를 추가했어요!';
-      case 'comment':
+      case 'reply':
         return '사진에 댓글을 추가했어요!';
       case 'upload':
         return '업로드랑 분류가 끝났어요!';
@@ -70,7 +70,7 @@ class _NotificationPageState extends State<NotificationPage> {
         return Icons.share;
       case 'bookmark':
         return Icons.favorite;
-      case 'comment':
+      case 'reply':
         return Icons.comment;
       case 'upload':
         return Icons.upload;
@@ -85,7 +85,7 @@ class _NotificationPageState extends State<NotificationPage> {
         return Colors.green;
       case 'bookmark':
         return Colors.blue;
-      case 'comment':
+      case 'reply':
         return Colors.pinkAccent;
       case 'upload':
         return Colors.deepOrangeAccent;

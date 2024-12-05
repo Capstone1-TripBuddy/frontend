@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../welcome/user_provider.dart';
+import '../main/dashboard_page.dart';
 
-class InviteCodePage extends StatelessWidget {
+class InviteCodePage extends StatefulWidget {
   final String inviteCode;
-
-  const InviteCodePage({super.key, required this.inviteCode});
+  final int groupId;
+  const InviteCodePage({super.key, required this.inviteCode, required this.groupId});
 
   @override
+  State<InviteCodePage> createState() => _InviteCodePageState();
+}
+
+class _InviteCodePageState extends State<InviteCodePage> {
+  @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.userData?['userId'];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Invite Code'),
@@ -35,7 +45,7 @@ class InviteCodePage extends StatelessWidget {
                   const SizedBox(height: 16),
                   // 초대 코드 텍스트
                   SelectableText(
-                    inviteCode,
+                    widget.inviteCode,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -47,7 +57,7 @@ class InviteCodePage extends StatelessWidget {
                   // 복사 버튼
                   ElevatedButton.icon(
                     onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: inviteCode));
+                      await Clipboard.setData(ClipboardData(text: widget.inviteCode));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('초대 코드가 복사되었습니다!')),
                       );
@@ -61,7 +71,10 @@ class InviteCodePage extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.popUntil(context, ModalRoute.withName('/group'));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => DashboardPage(groupId: widget.groupId, userId: userId)),
+                      );
                     },
                     child: const Text('확인'),
                   ),
