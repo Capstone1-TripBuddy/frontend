@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../notification/notification_overlay.dart';
 import 'fetch_main.dart';
 
 /// 사진 피드 페이지
@@ -14,8 +13,6 @@ class PhotoFeedPage extends StatefulWidget {
 }
 
 class _PhotoFeedPageState extends State<PhotoFeedPage> {
-  late final NotificationService _notificationService;
-
   List<Map<String, dynamic>> _photoFeed = [];
   List<Map<String, dynamic>> _groupMembers = [];
   bool _isLoading = true;
@@ -25,17 +22,6 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
     super.initState();
     _loadPhotoActivities();
     _loadGroupMembers();
-    /*
-    _notificationService = NotificationService();
-    // 알림 스트림 구독
-    _notificationService.notificationStream.listen((message) {
-      NotificationOverlayManager().show(context, message);
-    });
-
-    // 주기적으로 서버에서 알림 확인
-    Timer.periodic(const Duration(seconds: 60), (_) {
-      _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });*/
   }
 
   Future<void> _loadPhotoActivities() async {
@@ -66,10 +52,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
         .toList();
       });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('사진 활동 데이터를 불러오지 못했습니다: $e')),
-      );
+      print('사진 활동 데이터를 불러오지 못했습니다: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -82,10 +65,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
         _groupMembers = members;
       });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('그룹 멤버 데이터를 불러오지 못했습니다: $e')),
-      );
+      print('그룹 멤버 데이터를 불러오지 못했습니다: $e');
     }
   }
 

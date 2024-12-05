@@ -5,7 +5,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../welcome/user_provider.dart';
 import '../group/group_provider.dart';
-import '../notification/notification_overlay.dart';
 
 import 'profile_page.dart';
 import 'notification_page.dart';
@@ -97,7 +96,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
           setState(() {
             _photos.addAll(result['content']);
-            //좋아요 기능을 위한 All
+            //좋아요 기능을 위한 photo All
             if(tagFilter==null){
               _photosAll.addAll(result['content']);
             }

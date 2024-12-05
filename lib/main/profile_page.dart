@@ -28,9 +28,6 @@ class _ProfilePageState extends State<ProfilePage> {
       // userProvider를 사용해 사용자 데이터 업데이트
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       userProvider.updateUserData({'profilePicture': pickedFile.path});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('프로필 사진이 업데이트되었습니다.')),
-      );
     }
   }
   Future<void> _uploadProfileImage(BuildContext context) async {

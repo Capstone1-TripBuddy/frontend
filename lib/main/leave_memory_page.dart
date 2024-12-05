@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../notification/notification_overlay.dart';
 import 'fetch_main.dart';
 
 /// 좋아요 및 질문 3가지
@@ -16,8 +15,6 @@ class LeaveMemoryPage extends StatefulWidget {
 }
 
 class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
-  late final NotificationService _notificationService;
-
   bool _isLiked = false;
   bool _isLoading = false; // 좋아요 버튼 로딩 상태
   bool _isSavingMemory = false;
@@ -34,18 +31,6 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
     super.initState();
     _loadPhotoActivity();
     _fetchQuestions();
-    /*
-    _notificationService = NotificationService();
-
-    // 알림 스트림 구독
-    _notificationService.notificationStream.listen((message) {
-      NotificationOverlayManager().show(context, message);
-    });
-
-    // 주기적으로 서버에서 알림 확인
-    Timer.periodic(const Duration(seconds: 15), (_) {
-      _notificationService.fetchNotifications(widget.groupId, widget.userId);
-    });*/
   }
 
   Future<void> _loadPhotoActivity() async {
