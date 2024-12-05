@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:trip_buddy/constants.dart';
 import 'fetch_main.dart';
 
 /// 좋아요 및 질문 3가지
@@ -143,13 +144,9 @@ class _LeaveMemoryPageState extends State<LeaveMemoryPage> {
     final isShared = await sharePhoto(groupId: widget.groupId, userId: widget.userId, photoId: widget.photo['photoId'],);
 
     if (isShared) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('사진이 성공적으로 공유되었습니다!')),
-      );
+      showCustomSnackBar(context, '사진이 성공적으로 공유되었습니다!');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('사진 공유에 실패했습니다.')),
-      );
+      print('사진 공유에 실패했습니다.');
     }
   }
   @override

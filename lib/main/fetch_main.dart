@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:external_path/external_path.dart';
 import 'package:archive/archive_io.dart';
 import '/constants.dart';
@@ -74,7 +73,6 @@ Future<void> downloadAlbumAndExtract({required int groupId, required String albu
   try {
     // DCIM 폴더 가져오기
     final Directory? dcimDir = await _getDCIMDirectory();
-    print(dcimDir);
     if (dcimDir == null) throw Exception('DCIM directory not found.');
 
     // 다운로드할 ZIP 파일 경로

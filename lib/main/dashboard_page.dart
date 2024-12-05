@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../constants.dart';
 import '../welcome/user_provider.dart';
 import '../group/group_provider.dart';
 
@@ -193,7 +194,7 @@ class _DashboardPageState extends State<DashboardPage> {
               // 알림 기능 로직
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage(groupId: widget.groupId, userId: widget.userId,)),
+                MaterialPageRoute(builder: (context) => NotificationPage(groupId: widget.groupId, userId: widget.userId,photos: _photosAll,)),
               );
             },
           ),
@@ -270,9 +271,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 userProvider.clearUserData();
                 groupProvider.clearGroupData();
                 Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('로그아웃되었습니다.')),
-                );
+                showCustomSnackBar(context, '로그아웃되었습니다.');
               },
             ),
           ],

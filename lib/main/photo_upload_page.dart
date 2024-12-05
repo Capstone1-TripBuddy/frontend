@@ -18,6 +18,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
   List<Map<String, dynamic>> _selectedImages = [];
   bool _isUploading = false;
 
+  //폴더를 선택
   Future<void> pickFolder() async {
     // 폴더 선택
     String? selectedFolder = await FilePicker.platform.getDirectoryPath();
@@ -45,6 +46,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
     }
   }
 
+  //선택된 폴더 내에 이미지 파일만을 가져옴
   bool _isImage(String path) {
     // 이미지 파일인지 확인
     final extensions = ['jpg', 'jpeg', 'png', 'gif'];
@@ -96,9 +98,7 @@ class _PhotoUploadPageState extends State<PhotoUploadPage> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('사진이 성공적으로 업로드되었습니다!'),
-        ));
+        showCustomSnackBar(context, '사진이 성공적으로 업로드되었습니다!');
         setState(() {
           _selectedImages.clear();
         });

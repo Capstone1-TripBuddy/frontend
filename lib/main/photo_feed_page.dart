@@ -12,10 +12,13 @@ class PhotoFeedPage extends StatefulWidget {
   State<PhotoFeedPage> createState() => _PhotoFeedPageState();
 }
 
-class _PhotoFeedPageState extends State<PhotoFeedPage> {
+class _PhotoFeedPageState extends State<PhotoFeedPage> with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _photoFeed = [];
   List<Map<String, dynamic>> _groupMembers = [];
   bool _isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState(){
@@ -103,6 +106,7 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -163,7 +167,6 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 사용자 정보
             const SizedBox(height: 12),
             // 이미지
             ClipRRect(
@@ -225,45 +228,49 @@ class _PhotoFeedPageState extends State<PhotoFeedPage> {
             ),
             // 댓글 펼치기
             if (isCommentsVisible)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: comments.map((comment) {
-                    final memberInfo = _getMemberInfo(comment['userId']);
-                    return Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundImage: memberInfo['profilePicturePath']!
-                              .isNotEmpty
-                              ? NetworkImage(memberInfo['profilePicturePath']!)
-                              : const AssetImage(
-                              'assets/images/profilebase.PNG')
-                          as ImageProvider,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                memberInfo['name']!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                comment['content'],
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: comments.map((comment) {
+                      final memberInfo = _getMemberInfo(comment['userId']);
+                      return Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundImage: memberInfo['profilePicturePath']!
+                                .isNotEmpty
+                                ? NetworkImage(memberInfo['profilePicturePath']!)
+                                : const AssetImage(
+                                'assets/images/profilebase.PNG')
+                            as ImageProvider,
                           ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  memberInfo['name']!,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  comment['content'],
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
           ],

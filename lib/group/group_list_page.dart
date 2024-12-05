@@ -37,10 +37,7 @@ class _GroupListPageState extends State<GroupListPage> {
         _groups = groups;
       });
     } catch (e) {
-      if(!mounted)return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading groups: $e')),
-      );
+      print(e);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -100,7 +97,7 @@ class _GroupListPageState extends State<GroupListPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +109,6 @@ class _GroupListPageState extends State<GroupListPage> {
                             Navigator.popUntil(context, ModalRoute.withName('/group'));
                           },
                         ),
-                        const SizedBox(height: 8),
                         // 페이지 제목
                         const Center(
                           child: Text(
@@ -146,7 +142,6 @@ class _GroupListPageState extends State<GroupListPage> {
                               ),
                               onTap: () {
                                 final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-                    
                                 // 선택한 그룹 데이터를 가져옴
                                 final selectedGroup = _groups.firstWhere(
                                       (g) => g['id'] == group['id'], // id로 그룹 데이터 비교

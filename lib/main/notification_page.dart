@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'fetch_main.dart';
+import 'leave_memory_page.dart';
 
 
 class NotificationPage extends StatefulWidget {
   final int groupId;
   final int userId;
-
-  const NotificationPage({super.key, required this.groupId, required this.userId});
+  final List<Map<String, dynamic>> photos;
+  const NotificationPage({super.key, required this.groupId, required this.userId, required this.photos});
 
   @override
   State<NotificationPage> createState() => _NotificationPageState();
@@ -37,6 +38,8 @@ class _NotificationPageState extends State<NotificationPage> {
             'action': actionText,
             'icon': _mapActivityTypeToIcon(activityType),
             'iconColor': _mapActivityTypeToColor(activityType),
+            'activityType': activityType,
+            'photoId': activity['photoId'], // 추가된 photoId
           };
         }).toList();
       });
@@ -52,15 +55,15 @@ class _NotificationPageState extends State<NotificationPage> {
   String _mapActivityTypeToText(String activityType) {
     switch (activityType) {
       case 'share':
-        return '추억을 공유했어요!';
+        return '님이 추억을 공유했어요!';
       case 'bookmark':
-        return '사진에 좋아요를 추가했어요!';
+        return '님이 사진에 좋아요를 추가했어요!';
       case 'reply':
-        return '사진에 댓글을 추가했어요!';
+        return '님이 사진에 댓글을 추가했어요!';
       case 'upload':
-        return '업로드랑 분류가 끝났어요!';
+        return '님의 업로드랑 분류가 끝났어요!';
       default:
-        return '활동을 했어요!';
+        return '님이 활동을 했어요!';
     }
   }
 
@@ -143,7 +146,38 @@ class _NotificationPageState extends State<NotificationPage> {
                 itemCount: _notifications.length,
                 itemBuilder: (context, index) {
                   final notification = _notifications[index];
+                  print(notification);
                   return ListTile(
+                    onTap: notification['activityType'] == 'share'
+                        ? () {
+                      final photoId = notification['photoId'];
+                      final photo = widget.photos.firstWhere(
+                            (photo) => photo['photoId'] == photoId,
+                        orElse: () => {},
+                      );
+                      if (photo.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LeaveMemoryPage(
+                              photo: {
+                                'photoId': photo['photoId'],
+                                'fileUrl': photo['fileUrl'],
+                              },
+                              groupId: widget.groupId,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('해당 사진을 찾을 수 없습니다.'),
+                          ),
+                        );
+                      }
+                    }
+                        : null,
                     leading: CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.grey[300],

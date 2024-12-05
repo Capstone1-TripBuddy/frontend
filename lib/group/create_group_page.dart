@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:trip_buddy/constants.dart';
 import 'package:trip_buddy/group/fetch_group.dart';
 import 'package:trip_buddy/group/group_provider.dart';
 import 'package:trip_buddy/group/invite_code_page.dart';
@@ -46,10 +47,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       // 그룹 데이터 저장
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       groupProvider.setGroupData(groupData);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('그룹이 성공적으로 생성되었습니다!')),
-      );
+      showCustomSnackBar(context, '새로운 여행을 환영해요!');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -57,9 +55,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         ),
       );// 그룹 생성 완료 후 이전 페이지로 이동
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('그룹 생성 실패: $e')),
-      );
+      print(e);
     } finally {
       setState(() {
         _isLoading = false;

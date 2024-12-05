@@ -34,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await loginUser(email, password, userProvider.setUserData);
       userProvider.updateUserData({'email': email});
+      if(!mounted)return;
+      showCustomSnackBar(context, '환영합니다!');
       Navigator.pushNamed(context, '/group');
     } catch (e) {
       print(e);
@@ -92,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 8),
                         const Center(
                           child: Text(
-                            'Welcome Back',
+                            '다시 오셨군요!',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -102,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 8),
                         const Center(
                           child: Text(
-                            'Please enter your credentials to continue',
+                            '여행을 함께할 준비가 되셨나요?',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -126,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // 비밀번호 입력 필드와 "Forgot Password?" 링크
+                        // 비밀번호 입력 필드
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -163,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                             icon: const Icon(Icons.login, color: Colors.white),
                             label: const Text(
                               '로그인',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),

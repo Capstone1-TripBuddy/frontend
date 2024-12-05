@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '/constants.dart';
+import '../welcome/user_provider.dart';
 
 class GroupPage extends StatelessWidget{
   const GroupPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -53,11 +57,11 @@ class GroupPage extends StatelessWidget{
                         child: Column(
                           children: [
                             Icon(Icons.add_circle, size: 40, color: Colors.black),
-                            SizedBox(height: 5),
+                            SizedBox(height: 7),
                             Text(
                               '여행 생성',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
@@ -72,7 +76,7 @@ class GroupPage extends StatelessWidget{
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // 그룹 참가 카드
                   GestureDetector(
                     onTap: () {
@@ -90,11 +94,11 @@ class GroupPage extends StatelessWidget{
                         child: Column(
                           children: [
                             Icon(Icons.vpn_key, size: 40, color: Colors.black),
-                            SizedBox(height: 5),
+                            SizedBox(height: 7),
                             Text(
                               '여행 참가',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
@@ -110,7 +114,7 @@ class GroupPage extends StatelessWidget{
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // 그룹 리스트 카드
                   GestureDetector(
                     onTap: () {
@@ -128,11 +132,11 @@ class GroupPage extends StatelessWidget{
                         child: Column(
                           children: [
                             Icon(Icons.featured_play_list_outlined, size: 40, color: Colors.black),
-                            SizedBox(height: 5),
+                            SizedBox(height: 7),
                             Text(
                               '여행 리스트',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
@@ -148,6 +152,38 @@ class GroupPage extends StatelessWidget{
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                // 로그아웃 로직
+                userProvider.clearUserData();
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                showCustomSnackBar(context, '로그아웃되었습니다.');
+              },
+              child: Card(
+                elevation: 4,
+                color: Colors.white.withOpacity(0.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Colors.red),
+                      SizedBox(width: 4),
+                      Text(
+                        '로그아웃',
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

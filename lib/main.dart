@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
+        fontFamily: 'sejong',
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
         //scaffoldBackgroundColor: Colors.grey[50],

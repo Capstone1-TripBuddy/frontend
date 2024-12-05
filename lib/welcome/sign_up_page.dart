@@ -56,8 +56,8 @@ class _SignUpPageState extends State<SignUpPage> {
       _isLoading = false;
     });
     /// 여기 수정하기
-    showCustomSnackBar(context, result);
     if (result == '회원가입 성공') {
+      showCustomSnackBar(context, '처음 뵙겠습니다!');
       Navigator.popUntil(context, ModalRoute.withName('/')); // 성공 시 이전 화면으로 이동
     }
   }
@@ -114,7 +114,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         const SizedBox(height: 8),
                         const Center(
                           child: Text(
-                            'Create Account',
+                            '회원가입',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         const SizedBox(height: 8),
                         const Center(
                           child: Text(
-                            'Sign up to start your journey',
+                            '당신의 여행을 시작하기 위한 회원가입',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -261,7 +261,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 : const Icon(Icons.person_add, color: Colors.white),
                             label: const Text(
                               '회원가입',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
